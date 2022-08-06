@@ -1,6 +1,6 @@
 <template>
     <div class="control">
-        <Message :isVisible="msgboxVisible" :message="msg" :result="messageBoxResult" :strictly="true" />
+        <Message :isVisible="msgboxVisible" :message="msg" :result="messageBoxResult" />
         <div class="action">
             <img src="../../assets/dark/config.png" class="selectable" />
             <img src="../../assets/dark/save.png" class="selectable" />
@@ -114,7 +114,7 @@ import Message from '@/views/dialogs/Message.vue';
         },
         messageBoxResult: function(result: number): void {
             if(result == SystemMessage.MessageResult.None) return;
-            if(result == SystemMessage.MessageResult.OK) {
+            if(result != SystemMessage.MessageResult.Cancel) {
                 ipcRenderer.send('close');
             }
             this.msgboxVisible = false;
@@ -123,7 +123,7 @@ import Message from '@/views/dialogs/Message.vue';
     }
 })
 
-export default class Control extends Vue {
+export default class ControlView extends Vue {
     title = "x";
     msgboxVisible = false;
     msg = new SystemMessage();

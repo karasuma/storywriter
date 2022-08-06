@@ -5,12 +5,12 @@
   <!-- Main contents -->
   <div class="mainwrapper">
     <div class="header">
-      <Control title="Storywriter - Create your awesome stories" />
+      <ControlView title="Storywriter - Create your awesome stories" />
     </div>
 
     <div class="contents">
       <div class="menu">
-
+        <MenuView />
       </div>
 
       <div class="main">
@@ -33,10 +33,10 @@ body {
   & * {
     margin: 0;
     padding: 0;
-    min-width: 100%;
   }
 
   & .header {
+    min-width: 100%;
     position: absolute;
     left: 0;
     top: 0;
@@ -46,27 +46,28 @@ body {
   }
 
   & .contents {
+    min-width: 100%;
+    min-height: calc( 100% - #{$Footer-Height} * 3 );
     position: absolute;
     left: 0;
     top: $Header-Height;
-    bottom: $Footer-Height;
-    padding-top: $Header-Height;
     padding-bottom: $Footer-Height;
     background-color: $Content-BaseColor;
+    display: flex;
 
     & .menu {
+      background-color: $Content-BaseColor;
       width: $Menu-Width;
     }
 
     & .main {
-      margin: 0;
-      width: 100%;
       padding-top: $Header-Height;
       padding-bottom: $Footer-Height;
     }
   }
 
   & .footer {
+    min-width: 100%;
     position: absolute;
     left: 0;
     bottom: 0;
@@ -79,11 +80,13 @@ body {
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import Control from '@/views/controls/Control.vue';
+import ControlView from '@/views/controls/Control.vue';
+import MenuView from '@/views/menu/Menu.vue';
 
 @Options({
   components: {
-    Control,
+    ControlView,
+    MenuView
   },
 })
 
