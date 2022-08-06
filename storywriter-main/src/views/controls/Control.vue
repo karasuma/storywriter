@@ -1,6 +1,6 @@
 <template>
     <div class="control">
-        <Message :isVisible="msgboxVisible" :message="msg" :result="messageBoxResult" />
+        <Message :message="msg" :result="messageBoxResult" />
         <div class="action">
             <img src="../../assets/dark/config.png" class="selectable" />
             <img src="../../assets/dark/save.png" class="selectable" />
@@ -104,7 +104,7 @@ import Message from '@/views/dialogs/Message.vue';
     methods: {
         close: function() {
             this.msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
-            this.msgboxVisible = true;
+            ipcRenderer.send('messagebox');
         },
         minimize: function() {
             ipcRenderer.send('minimize');
@@ -117,15 +117,12 @@ import Message from '@/views/dialogs/Message.vue';
             if(result != SystemMessage.MessageResult.Cancel) {
                 ipcRenderer.send('close');
             }
-            this.msgboxVisible = false;
-            console.log(`result: ${result}`);
         }
     }
 })
 
 export default class ControlView extends Vue {
     title = "x";
-    msgboxVisible = false;
     msg = new SystemMessage();
 }
 </script>

@@ -1,6 +1,6 @@
 <template>
-    <teleport to="#modals" v-if="isVisible">
-        <div id="Message">
+    <teleport to="#modal-msgbox">
+        <div id="Message" v-show="isVisible">
             <div class="wrapper">
                 <div class="title">{{ message.title }}</div>
 
@@ -127,13 +127,10 @@ import { Options, Vue } from 'vue-class-component';
 import SystemMessage from '@/logics/SystemMessage';
 import IMessageResult from '@/logics/IMessageResult';
 import { PropType } from 'vue';
+import { ipcMain, ipcRenderer } from 'electron';
 
 @Options({
     props: {
-        isVisible: {
-            type: Boolean,
-            required: true
-        },
         message: {
             type: SystemMessage,
             required: true
@@ -154,10 +151,12 @@ import { PropType } from 'vue';
         Reject(): void {
             if(!this.showNo()) this.result(SystemMessage.MessageResult.None);
             else this.result(SystemMessage.MessageResult.No);
+            this.isVisible = false;
         },
         Cancel(): void {
             if(!this.showCancel()) this.result(SystemMessage.MessageResult.None);
             else this.result(SystemMessage.MessageResult.Cancel);
+            this.isVisible = false;
         },
         showNo(): boolean {
             return this.message.status != SystemMessage.MessageType.Info;
@@ -176,9 +175,15 @@ import { PropType } from 'vue';
 })
 
 export default class Message extends Vue {
-    isVisible!: boolean;
+    isVisible = false;
     message!: SystemMessage;
     result!: IMessageResult;
     strictly!: boolean;
+
+    mounted(): void {
+        ipcRenderer.on('messagebox-relay', () => {
+            this.isVisible = true;
+        });
+    }
 }
 </script>

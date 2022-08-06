@@ -53,6 +53,9 @@ async function createWindow() {
   ipcMain.on('close', () => {
     win.close()
   })
+  ipcMain.on('messagebox', (evt) => {
+    evt.sender.send('messagebox-relay');
+  })
 }
 
 // Quit when all windows are closed.
