@@ -87,9 +87,9 @@
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import { ipcRenderer } from 'electron';
-import SystemMessage from '@/logics/SystemMessage';
+import SystemMessage from '@/logics/utils/SystemMessage';
 import Message from '@/views/dialogs/Message.vue';
+import { IpcUtils } from '@/logics/utils/ipc-utils';
 
 @Options({
     components: {
@@ -104,18 +104,18 @@ import Message from '@/views/dialogs/Message.vue';
     methods: {
         close: function() {
             this.msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
-            ipcRenderer.send('messagebox');
+            IpcUtils.Send('messagebox');
         },
         minimize: function() {
-            ipcRenderer.send('minimize');
+            IpcUtils.Send('minimize');
         },
         maximize: function() {
-            ipcRenderer.send('maximize');
+            IpcUtils.Send('maximize');
         },
         messageBoxResult: function(result: number): void {
             if(result == SystemMessage.MessageResult.None) return;
             if(result != SystemMessage.MessageResult.Cancel) {
-                ipcRenderer.send('close');
+                IpcUtils.Send('close');
             }
         }
     }

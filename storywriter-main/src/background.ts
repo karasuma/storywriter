@@ -1,8 +1,9 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, ipcMain } from 'electron'
+import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
+import { IpcUtils } from './logics/utils/ipc-utils'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -44,18 +45,16 @@ async function createWindow() {
   }
 
   // Window control events
-  ipcMain.on('minimize', () => {
+  IpcUtils.ReceiveOnMain('minimize', () => {
     win.minimize()
   })
-  ipcMain.on('maximize', () => {
+  IpcUtils.ReceiveOnMain('maximize', () => {
     win.isMaximized() ? win.unmaximize() : win.maximize()
   })
-  ipcMain.on('close', () => {
+  IpcUtils.ReceiveOnMain('close', () => {
     win.close()
   })
-  ipcMain.on('messagebox', (evt) => {
-    evt.sender.send('messagebox-relay');
-  })
+  IpcUtils.RelayOnMain('messagebox')
 }
 
 // Quit when all windows are closed.

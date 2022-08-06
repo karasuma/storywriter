@@ -1,6 +1,6 @@
 <template>
   <!-- Teleport targets -->
-  <div id="modals"></div>
+  <div id="modal-msgbox"></div>
 
   <!-- Main contents -->
   <div class="mainwrapper">

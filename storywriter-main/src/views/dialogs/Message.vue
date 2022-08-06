@@ -124,10 +124,10 @@
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
-import SystemMessage from '@/logics/SystemMessage';
-import IMessageResult from '@/logics/IMessageResult';
+import SystemMessage from '@/logics/utils/SystemMessage';
+import IMessageResult from '@/logics/utils/IMessageResult';
 import { PropType } from 'vue';
-import { ipcMain, ipcRenderer } from 'electron';
+import { IpcUtils } from '@/logics/utils/ipc-utils';
 
 @Options({
     props: {
@@ -181,7 +181,7 @@ export default class Message extends Vue {
     strictly!: boolean;
 
     mounted(): void {
-        ipcRenderer.on('messagebox-relay', () => {
+        IpcUtils.Receive(IpcUtils.GenRelayedChannel('messagebox'), () => {
             this.isVisible = true;
         });
     }
