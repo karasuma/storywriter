@@ -55,6 +55,7 @@ async function createWindow() {
     win.close()
   })
   IpcUtils.RelayOnMain('messagebox')
+  IpcUtils.RelayOnMain('KernelPanic')
 }
 
 // Quit when all windows are closed.

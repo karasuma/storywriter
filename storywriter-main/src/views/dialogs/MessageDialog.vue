@@ -131,17 +131,9 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
 
 @Options({
     props: {
-        message: {
-            type: SystemMessage,
-            required: true
-        },
         result: {
             type: Function as PropType<IMessageResult>,
             required: true
-        },
-        strictly: {
-            type: Boolean,
-            default: false
         }
     },
     methods: {
@@ -174,14 +166,19 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
     }
 })
 
-export default class Message extends Vue {
+export default class MessageDialog extends Vue {
     isVisible = false;
-    message!: SystemMessage;
+    message = new SystemMessage();
+    strictly = false;
     result!: IMessageResult;
-    strictly!: boolean;
 
     mounted(): void {
-        IpcUtils.Receive(IpcUtils.GenRelayedChannel('messagebox'), () => {
+        IpcUtils.Receive(IpcUtils.GenRelayedChannel('messagebox'), (_, arg) => {
+            const args = arg as unknown[];
+            this.message = args[0] as SystemMessage;
+            if(args.length > 1) {
+                this.strictly = args[1] as boolean;
+            }
             this.isVisible = true;
         });
     }

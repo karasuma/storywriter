@@ -1,6 +1,6 @@
 <template>
     <div class="control">
-        <Message :message="msg" :result="messageBoxResult" />
+        <MessageDialog :result="messageBoxResult" />
         <div class="action">
             <img src="../../assets/dark/config.png" class="selectable" />
             <img src="../../assets/dark/save.png" class="selectable" />
@@ -88,12 +88,12 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import SystemMessage from '@/logics/utils/SystemMessage';
-import Message from '@/views/dialogs/Message.vue';
+import MessageDialog from '@/views/dialogs/MessageDialog.vue';
 import { IpcUtils } from '@/logics/utils/ipc-utils';
 
 @Options({
     components: {
-        Message
+        MessageDialog
     },
     props: {
         title: {
@@ -103,8 +103,9 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
     },
     methods: {
         close: function() {
-            this.msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
-            IpcUtils.Send('messagebox');
+            //this.msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
+            const msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
+            IpcUtils.Send('messagebox', msg);
         },
         minimize: function() {
             IpcUtils.Send('minimize');
@@ -123,6 +124,5 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
 
 export default class ControlView extends Vue {
     title = "x";
-    msg = new SystemMessage();
 }
 </script>

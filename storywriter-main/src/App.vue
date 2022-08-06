@@ -1,5 +1,6 @@
 <template>
   <!-- Teleport targets -->
+  <KernelPanic />
   <div id="modal-msgbox"></div>
 
   <!-- Main contents -->
@@ -80,11 +81,13 @@ body {
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
+import KernelPanic from './views/dialogs/KernelPanic.vue';
 import ControlView from '@/views/controls/Control.vue';
 import MenuView from '@/views/menu/Menu.vue';
 
 @Options({
   components: {
+    KernelPanic,
     ControlView,
     MenuView
   },
