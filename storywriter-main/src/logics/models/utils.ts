@@ -32,11 +32,11 @@ export class Utils {
         return [nums[0], nums[1], nums[2]];
     }
 
-    static isNullOrUndefined(value: any | unknown): boolean {
+    static isNullOrUndefined(value: unknown): boolean {
         return value === null || value === undefined;
     }
 
-    static isObject(value: any | unknown): boolean {
+    static isObject(value: unknown): boolean {
         const isObj = typeof value === 'object' || typeof value === 'function';
         return !this.isNullOrUndefined(value) && isObj;
     }

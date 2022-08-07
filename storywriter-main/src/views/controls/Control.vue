@@ -103,7 +103,6 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
     },
     methods: {
         close: function() {
-            //this.msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
             const msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
             IpcUtils.Send('messagebox', msg);
         },

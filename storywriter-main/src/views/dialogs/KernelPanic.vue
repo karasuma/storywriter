@@ -2,7 +2,7 @@
     <div id="KernelPanic" v-show="isVisible">
         <div class="wrapper">
             <div class="title">{{ title }}</div>
-            <div class="message">{{ message }}</div>
+            <div class="message"><p>{{ message }}</p></div>
             <div class="button">
                 <div class="button__confirm" @click="Exit">Got it.</div>
             </div>
@@ -47,16 +47,24 @@ $Border-Alert-Color: #833;
             font-size: 32px;
             font-weight: bold;
             color: $Font-Alert-Color;
+            @include hide-overflow-text;
         }
 
         & .message {
             width: 95%;
             margin: 0 auto;
-            padding: 15vh 0;
+            padding: 5vh 0;
             display: flex;
             font-size: 24px;
             border-top: solid 1px $Border-Alert-Color;
             border-bottom: solid 2px $Border-Alert-Color;
+
+            & p {
+                overflow-y: scroll;
+                max-height: 30vh;
+                width: 95%;
+                margin: 0 auto;
+            }
         }
 
         & .button {
