@@ -2,6 +2,15 @@ import { ipcMain, ipcRenderer } from "electron";
 import { IpcMainEvent, IpcRendererEvent } from "electron/main";
 
 export class IpcUtils {
+    public static readonly DefinedIpcChannels = {
+        Minimize: "minimize",
+        Maximize: "maximize",
+        Close: "close",
+        KernelPanic: "KernelPanic",
+        MessageBox: "messagebox",
+        InputBox: "inputbox",
+    } as const;
+
     public static RelayedPrefix = "Relayed::";
 
     public static GenRelayedChannel(channel: string): string {
@@ -14,6 +23,10 @@ export class IpcUtils {
 
     public static Receive(channel: string, action: (e: IpcRendererEvent, ...args: unknown[]) => void): void {
         ipcRenderer.on(channel, action);
+    }
+
+    public static ReceiveFromRelay(channel: string, action: (e: IpcRendererEvent, ...args: unknown[]) => void): void {
+        IpcUtils.Receive(IpcUtils.GenRelayedChannel(channel), action);
     }
 
     public static ReceiveOnMain(channel: string, action?: (event?: IpcMainEvent, ...args: unknown[]) => void): void {

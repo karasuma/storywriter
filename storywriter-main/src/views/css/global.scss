@@ -3,6 +3,7 @@
 $Header-Height: 34px;
 $Footer-Height: 18px;
 $Menu-Width: 45px;
+$Font-Size: 14px;
 
 ::-webkit-scrollbar {
     width: 10px;
@@ -30,7 +31,7 @@ $Menu-Width: 45px;
 * {
     margin: 0;
     background-color: transparent;
-    font-size: 14px;
+    font-size: $Font-Size;
     font-family: Avenir,Lato,-apple-system,BlinkMacSystemFont,Helvetica Neue,Hiragino Kaku Gothic ProN,Meiryo,メイリオ,sans-serif;
 }
 
@@ -40,6 +41,40 @@ p {
 
 img {
     -webkit-user-drag: none;
+}
+
+$Separator-Color: #444;
+$Separator-Selected-Color: #888;
+textarea {
+    background-color: transparent;
+    border: solid 1px $Separator-Color;
+    border-radius: 8px;
+    width: 99%;
+    min-height: 42px;
+    max-height: 250px;
+    padding: 4px;
+    resize: vertical;
+    &:focus {
+        outline: none;
+    }
+}
+
+input {
+    background-color: transparent;
+    border-top: none;
+    border-left: none;
+    border-right: none;
+    border-bottom: solid 1px $Separator-Color;
+    padding: 2px 3px;
+    opacity: 0.9;
+    &:hover {
+        cursor: pointer;
+    }
+    &:focus {
+        border-bottom: solid 2px $Separator-Selected-Color;
+        outline: none;
+        opacity: 1;
+    }
 }
 
 // Mixins

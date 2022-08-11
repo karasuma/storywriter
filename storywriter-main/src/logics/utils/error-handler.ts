@@ -1,5 +1,4 @@
 import Logger from "./logger";
-import { ipcRenderer } from "electron";
 import { IpcUtils } from "./ipc-utils";
 
 export default class ErrorHandler {
@@ -18,7 +17,7 @@ export default class ErrorHandler {
 
         // Abort if the cirtical error has occured
         if(level == ErrorHandler.ErrorLevel.Critical) {
-            IpcUtils.Send('KernelPanic', caption, message);
+            IpcUtils.Send(IpcUtils.DefinedIpcChannels.KernelPanic, caption, message);
             return logstr;
         }
 

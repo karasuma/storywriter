@@ -23,8 +23,7 @@ $Border-Alert-Color: #833;
     height: 100%;
     background-color: rgba(50, 0, 0, 0.4);
 
-    // 42: Answer to the Ultimate Question of Life, the Universe, and Everything
-    z-index: calc( #{$Dialog-ZIndex} + 42 );
+    z-index: 100;
 
     & * {
         color: $Font-Color;
@@ -94,7 +93,7 @@ import { Options, Vue } from 'vue-class-component'
 @Options({
     methods: {
         Exit(): void {
-            IpcUtils.Send("close");
+            IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
         }
     }
 })
@@ -105,12 +104,11 @@ export default class KernelPanic extends Vue {
     message = "";
 
     mounted(): void {
-        IpcUtils.Receive(IpcUtils.GenRelayedChannel("KernelPanic"), (_, arg) => {
+        IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.KernelPanic, (_, arg) => {
             const params = arg as string[];
             this.title = params[0];
             this.message = params[1];
             this.isVisible = true;
-            console.log("Kernel Panic");
         })
     }
 }

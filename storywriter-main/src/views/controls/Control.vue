@@ -1,6 +1,6 @@
 <template>
+    <MessageDialog :result="messageBoxResult" :message="message" />
     <div class="control">
-        <MessageDialog :result="messageBoxResult" />
         <div class="action">
             <img src="../../assets/dark/config.png" class="selectable" />
             <img src="../../assets/dark/save.png" class="selectable" />
@@ -103,19 +103,18 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
     },
     methods: {
         close: function() {
-            const msg = new SystemMessage("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
-            IpcUtils.Send('messagebox', msg);
+            this.message = SystemMessage.Create("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
         },
         minimize: function() {
-            IpcUtils.Send('minimize');
+            IpcUtils.Send(IpcUtils.DefinedIpcChannels.Minimize);
         },
         maximize: function() {
-            IpcUtils.Send('maximize');
+            IpcUtils.Send(IpcUtils.DefinedIpcChannels.Maximize);
         },
         messageBoxResult: function(result: number): void {
             if(result == SystemMessage.MessageResult.None) return;
             if(result != SystemMessage.MessageResult.Cancel) {
-                IpcUtils.Send('close');
+                IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
             }
         }
     }
@@ -123,5 +122,6 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
 
 export default class ControlView extends Vue {
     title = "x";
+    message = new SystemMessage();
 }
 </script>

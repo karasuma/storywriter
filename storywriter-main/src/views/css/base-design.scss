@@ -2,6 +2,7 @@
 
 $Base-Color: #222;
 $Base-Inv-Color: #fff;
+$Hover-Color: #444;
 $Font-Color: #eee;
 $Header-Color: #141414;
 $Header-Hover-Color: #999;
@@ -26,6 +27,7 @@ $Unhovering-Opacity: 0.5;
     opacity: $Unhovering-Opacity;
     &:hover {
         opacity: 1;
+        cursor: pointer;
     }
 }
 

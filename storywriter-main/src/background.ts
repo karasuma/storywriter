@@ -45,17 +45,18 @@ async function createWindow() {
   }
 
   // Window control events
-  IpcUtils.ReceiveOnMain('minimize', () => {
+  IpcUtils.ReceiveOnMain(IpcUtils.DefinedIpcChannels.Minimize, () => {
     win.minimize()
   })
-  IpcUtils.ReceiveOnMain('maximize', () => {
+  IpcUtils.ReceiveOnMain(IpcUtils.DefinedIpcChannels.Maximize, () => {
     win.isMaximized() ? win.unmaximize() : win.maximize()
   })
-  IpcUtils.ReceiveOnMain('close', () => {
+  IpcUtils.ReceiveOnMain(IpcUtils.DefinedIpcChannels.Close, () => {
     win.close()
   })
-  IpcUtils.RelayOnMain('messagebox')
-  IpcUtils.RelayOnMain('KernelPanic')
+
+  // Edit views -> Dialogs
+  IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.KernelPanic)
 }
 
 // Quit when all windows are closed.

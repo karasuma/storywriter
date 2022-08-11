@@ -43,6 +43,7 @@ img {
 
 .selectable:hover {
   opacity: 1;
+  cursor: pointer;
 }
 
 * {

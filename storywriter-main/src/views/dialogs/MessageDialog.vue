@@ -1,9 +1,8 @@
 <template>
-    <teleport to="#modal-msgbox">
-        <div id="Message" v-show="isVisible">
+    <teleport to="#modal-msgbox" v-if="message.visible">
+        <div id="Message">
             <div class="wrapper">
                 <div class="title">{{ message.title }}</div>
-
                 <div class="contents">
                     <div class="icon">
                         <img v-if="getImagePath" src="@/assets/info.png" />
@@ -13,7 +12,6 @@
                         <p>{{ message.message }}</p>
                     </div>
                 </div>
-
                 <div class="buttons">
                     <div class="buttons__confirm" @click="Confirm">YES!</div>
                     <div class="buttons__reject" :class="{invisible: !showNo()}" @click="Reject">No...</div>
@@ -125,14 +123,17 @@
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
 import SystemMessage from '@/logics/utils/SystemMessage';
-import IMessageResult from '@/logics/utils/IMessageResult';
-import { PropType } from 'vue';
-import { IpcUtils } from '@/logics/utils/ipc-utils';
+import { INumberResult } from '@/logics/utils/interfaces';
+import { PropType } from '@vue/runtime-core';
 
 @Options({
     props: {
         result: {
-            type: Function as PropType<IMessageResult>,
+            type: Function as PropType<INumberResult>,
+            required: true
+        },
+        message: {
+            type: SystemMessage,
             required: true
         }
     },
@@ -141,20 +142,26 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
             this.result(SystemMessage.MessageResult.OK);
         },
         Reject(): void {
-            if(!this.showNo()) this.result(SystemMessage.MessageResult.None);
-            else this.result(SystemMessage.MessageResult.No);
-            this.isVisible = false;
+            if(!this.showNo()) {
+                this.result(SystemMessage.MessageResult.None);
+            } else {
+                this.result(SystemMessage.MessageResult.No);
+            }
+            this.message.visible = false;
         },
         Cancel(): void {
-            if(!this.showCancel()) this.result(SystemMessage.MessageResult.None);
-            else this.result(SystemMessage.MessageResult.Cancel);
-            this.isVisible = false;
+            if(!this.showNo()) {
+                this.result(SystemMessage.MessageResult.None);
+            } else {
+                this.result(SystemMessage.MessageResult.Cancel);
+            }
+            this.message.visible = false;
         },
         showNo(): boolean {
             return this.message.status != SystemMessage.MessageType.Info;
         },
         showCancel(): boolean {
-            return this.message.status != SystemMessage.MessageType.Info && !this.strictly;
+            return this.message.status != SystemMessage.MessageType.Info && !this.message.strictly;
         }
     },
     computed: {
@@ -167,20 +174,7 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
 })
 
 export default class MessageDialog extends Vue {
-    isVisible = false;
     message = new SystemMessage();
-    strictly = false;
-    result!: IMessageResult;
-
-    mounted(): void {
-        IpcUtils.Receive(IpcUtils.GenRelayedChannel('messagebox'), (_, arg) => {
-            const args = arg as unknown[];
-            this.message = args[0] as SystemMessage;
-            if(args.length > 1) {
-                this.strictly = args[1] as boolean;
-            }
-            this.isVisible = true;
-        });
-    }
+    result!: INumberResult;
 }
 </script>

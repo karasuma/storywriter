@@ -1,6 +1,7 @@
 <template>
   <!-- Teleport targets -->
   <KernelPanic />
+  <div id="modal-inputbox"></div>
   <div id="modal-msgbox"></div>
 
   <!-- Main contents -->
@@ -15,6 +16,7 @@
       </div>
 
       <div class="main">
+        <StoryMainView />
       </div>
     </div>
 
@@ -49,6 +51,7 @@ body {
   & .contents {
     min-width: 100%;
     min-height: calc( 100% - #{$Footer-Height} * 3 );
+    max-height: calc( 100% - #{$Footer-Height} * 3 );
     position: absolute;
     left: 0;
     top: $Header-Height;
@@ -62,8 +65,9 @@ body {
     }
 
     & .main {
-      padding-top: $Header-Height;
-      padding-bottom: $Footer-Height;
+      width: auto;
+      overflow-x: hidden;
+      overflow-y: scroll;
     }
   }
 
@@ -84,15 +88,25 @@ import { Options, Vue } from 'vue-class-component';
 import KernelPanic from './views/dialogs/KernelPanic.vue';
 import ControlView from '@/views/controls/Control.vue';
 import MenuView from '@/views/menu/Menu.vue';
+import StoryMainView from './views/story/StoryMainView.vue';
+import InputDialog from './views/dialogs/InputDialog.vue';
+import MessageDialog from './views/dialogs/MessageDialog.vue';
 
 @Options({
   components: {
     KernelPanic,
+    InputDialog,
+    MessageDialog,
     ControlView,
-    MenuView
+    MenuView,
+    StoryMainView
   },
+  methods: {
+
+  }
 })
 
-export default class App extends Vue { }
+export default class App extends Vue {
+}
 
 </script>
