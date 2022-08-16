@@ -1,11 +1,15 @@
 <template>
     <InputDialog :result="appendItem" :inputMessage="inputdlg" />
     <MessageDialog :result="deleteItem" :message="messagedlg" />
-    <div id="StoryItem">
-        <div v-if="story.isDir" class="item">
-            <div class="title" :style="leftMargin()">
-                <div style="width: 2px" :style="selected()"></div>
-                <img src="@/assets/dark/caret.png"/>
+    <div class="StoryItem" :style="itemBorder()">
+        <div v-if="story.isDir" class="item"
+                    @dragover="$emit('ondragover', story.id, $event)"
+                    @dragleave="$emit('ondragleave', story.id)"
+                    @drop="$emit('ondrop', story.id, $event)">
+            <div class="title">
+                <div class="draggable"></div>
+                <div :style="selected()"></div>
+                <img src="@/assets/dark/caret.png" @click="toggleExpand()" :style="expandingImg()"/>
                 <p :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
             <div class="controls">
@@ -13,9 +17,16 @@
                 <img title="削除" src="@/assets/dark/dispose.png" @click="deleteDialog()" class="selectable" />
             </div>
         </div>
-        <div v-else class="item">
-            <div class="title" :style="leftMargin()">
-                <div style="width: 2px" :style="selected()"></div>
+        <div v-else class="item"
+                    draggable="true"
+                    @dragstart="$emit('ondragstart', story.id, $event)"
+                    @dragover="$emit('ondragover', story.id, $event)"
+                    @dragleave="$emit('ondragleave', story.id)"
+                    @drop="$emit('ondrop', story.id, $event)"
+        >
+            <div class="title">
+                <div class="draggable"></div>
+                <div :style="selected()"></div>
                 <div class="blank"></div>
                 <p :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
@@ -30,7 +41,7 @@
 @import '@/views/css/base-design.scss';
 
 $StoryItem-Height: 18px;
-#StoryItem {
+.StoryItem {
     margin-left: 3px;
     padding: 2px 0;
     width: calc( 100% - 6px );
@@ -48,6 +59,17 @@ $StoryItem-Height: 18px;
         & .title {
             max-width: calc( 100% - 60px );
             display: flex;
+
+            & .draggable {
+                width: 20px;
+                margin: 2px 0;
+                border-left: double 6px $Border-Color;
+                opacity: 0.5;
+                user-select: contain;
+                &:hover {
+                    opacity: 1;
+                }
+            }
 
             $Caret: calc( #{$StoryItem-Height} - 3px );
             & img {
@@ -105,12 +127,23 @@ import InputMessage from "@/logics/utils/input-message";
             required: true
         }
     },
+    emits: [
+        "ondragstart",
+        "ondragover",
+        "ondragleave",
+        "ondrop",
+        "refreshItems"
+    ],
     methods: {
+        itemBorder(): string {
+            return `padding-left: 3px; border-left: solid 4px ${this.story.content.color};`;
+        },
         leftMargin(): string {
             return `margin-left: ${this.GetDepthMargin()}px;`;
         },
         selected(): string {
-            return `background-color: ${this.story.isEditing ? "orange" : "transparent"};`;
+            const globalcss = "margin-right: 6px; width: 3px;";
+            return `${this.leftMargin()} ${globalcss} background-color: ${this.story.isEditing ? "orange" : "transparent"};`;
         },
         appendItem(result: string): void {
             this.story.AppendStory(result);
@@ -128,7 +161,13 @@ import InputMessage from "@/logics/utils/input-message";
             const msg = `${this.story.content.caption} を削除しますか？`;
             this.messagedlg = SystemMessage.Create(title, msg, SystemMessage.MessageType.Normal, true);
         },
-    }
+        toggleExpand(): void {
+            this.$emit('refreshItems', this.story);
+        },
+        expandingImg(): string {
+            return `transform: rotate(${this.story.isExpanding ? 90 : 0}deg);`;
+        }
+    },
 })
 
 export default class StoryHierarchyItemView extends Vue {

@@ -40,7 +40,7 @@ import StoryHierarchyView from './StoryHierarchyView.vue';
 })
 
 export default class StoryMainView extends Vue {
-    story = new Stories(true, "");
+    story = Stories.Create();
     mounted(): void {
         this.story.AppendStory("Content1");
         const dir1 = this.story.AppendStory("Dir1", true);

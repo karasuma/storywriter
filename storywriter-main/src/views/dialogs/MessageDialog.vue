@@ -140,6 +140,7 @@ import { PropType } from '@vue/runtime-core';
     methods: {
         Confirm(): void {
             this.result(SystemMessage.MessageResult.OK);
+            this.message.visible = false;
         },
         Reject(): void {
             if(!this.showNo()) {

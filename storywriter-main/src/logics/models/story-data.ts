@@ -1,3 +1,4 @@
+import ErrorHandler from "../utils/error-handler";
 import { IUniqueObject, Utils } from "./utils";
 
 export class Stories implements IUniqueObject {
@@ -12,20 +13,26 @@ export class Stories implements IUniqueObject {
     public depth = 0;
 
     // Data status
-    public parent: Stories | null = null;
+    public parent: Stories;
     public isDir = false;
     private flattenStories: Stories[] = new Array<Stories>();
 
     public readonly root: Stories;
+    public static readonly RootName = "ROOT";
 
     constructor(
         createAsDir: boolean,
         caption: string,
-        root: Stories | null = null
+        root?: Stories
     ) {
         this.isDir = createAsDir;
-        this.content.caption = caption ?? "";
+        this.content.caption = caption;
         this.root = root ?? this;
+        this.parent = this;
+    }
+
+    public static Create(): Stories {
+        return new Stories(true, Stories.RootName);
     }
 
     public static MakeFlatStories(root: Stories, stories?: Stories[]): Array<Stories> {
@@ -46,20 +53,44 @@ export class Stories implements IUniqueObject {
         const index = children.findIndex((x: Stories) => x.id === id);
         if(index >= 0) {
             children.splice(index, 1);
+            root.InitializeHierarchy();
             return true;
         }
         for(const s of children) {
             const removed = Stories.RemoveStoryFromID(s, id, s.children);
-            if(removed) return true;
+            if(removed) {
+                root.InitializeHierarchy();
+                return true;
+            }
         }
         return false;
     }
 
-    public static ResetAllTimes(root: Stories): void {
-        let time = 1;
-        root.flattenStories.forEach(s => {
-            s.content.time = s.isDir ? -1 : time++;
+    public static ResetAllTimes(root: Stories, startTime?: number): number {
+        let time = startTime ?? 1;
+        root.children.forEach((s: Stories) => {
+            if(s.isDir) {
+                time = Stories.ResetAllTimes(s, time);
+            } else {
+                s.content.time = time++;
+            }
         });
+        return time;
+    }
+
+    public static ResetChildrenDepth(root: Stories, currentDepth?: number): void {
+        const depth = currentDepth ?? 1;
+        root.children.forEach(s => {
+            s.depth = depth;
+            Stories.ResetChildrenDepth(s, depth + 1);
+        });
+    }
+
+    public InitializeHierarchy(): void {
+        Stories.ResetAllTimes(this.root);
+        Stories.ResetChildrenDepth(this.root);
+        this.root.flattenStories.splice(0);
+        this.root.flattenStories = Stories.MakeFlatStories(this.root);
     }
 
     public GetFlattenStories(): Array<Stories> {
@@ -67,19 +98,22 @@ export class Stories implements IUniqueObject {
     }
 
     public GetLastTime(): number {
-        if(this.root.children.length == 0) return -1;
+        if(this.children.length == 0) return -1;
         return this.root.flattenStories
             .map((x: Stories) => x.content.time)
             .reduce((acc: number, curr: number) => acc > curr ? acc : curr);
     }
 
     public AppendStory(caption: string, createAsDir = false): Stories {
+        if(!this.isDir) {
+            const errormsg = `AppendStory tried to append ${caption} for the non-directory '${this.content.caption}'.`;
+            ErrorHandler.RaiseError("Story Apped error", errormsg, ErrorHandler.ErrorLevel.Failed);
+        }
         const newstory = new Stories(createAsDir, caption, this.root);
         newstory.parent = this;
         newstory.depth = this.depth + 1;
         this.children.push(newstory);
-        this.root.flattenStories = Stories.MakeFlatStories(this.root);
-        Stories.ResetAllTimes(this.root);
+        this.InitializeHierarchy();
         return newstory;
     }
 
@@ -89,11 +123,11 @@ export class Stories implements IUniqueObject {
 
     public IsVisible(): boolean {
         let parent = this.parent;
-        while(parent !== null) {
-            if(parent.isExpanding) return true;
+        while(parent.content.caption != Stories.RootName) {
+            if(!parent.isExpanding) return false;
             parent = parent.parent;
         }
-        return false;
+        return true;
     }
 
     public Clear(): void {
@@ -128,7 +162,7 @@ export class Stories implements IUniqueObject {
         flatten[right].isExpanding = tmpIsExpanding
         flatten[right].isDir = tmpIsDir;
         
-        Stories.ResetAllTimes(this.root);
+        this.InitializeHierarchy();
     }
 
     public MoveStory(id: string, upward: boolean): void {

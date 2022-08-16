@@ -23,6 +23,7 @@
         padding: 6px 4px;
         margin: 6px 0;
         width: calc( #{$Menu-Width} - 12px );
+        user-select: none;
         cursor: pointer;
     }
     & *:first-child {
