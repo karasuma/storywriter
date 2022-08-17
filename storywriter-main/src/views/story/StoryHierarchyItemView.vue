@@ -8,7 +8,7 @@
                     @drop="$emit('ondrop', story.id, $event)">
             <div class="title">
                 <div class="draggable"></div>
-                <div :style="selected()"></div>
+                <div class="selected" :style="[selected(), directoryBorder()]"></div>
                 <img src="@/assets/dark/caret.png" @click="toggleExpand()" :style="expandingImg()"/>
                 <p :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
@@ -26,7 +26,7 @@
         >
             <div class="title">
                 <div class="draggable"></div>
-                <div :style="selected()"></div>
+                <div class="selected" :style="[selected(), directoryBorder()]"></div>
                 <div class="blank"></div>
                 <p :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
@@ -43,9 +43,13 @@
 $StoryItem-Height: 18px;
 .StoryItem {
     margin-left: 3px;
-    padding: 2px 0;
     width: calc( 100% - 6px );
+    padding: 2px 0;
     height: $StoryItem-Height;
+
+    &:hover {
+        background-color: $Hover-Color;
+    }
 
     & * {
         @include non-user-select;
@@ -59,6 +63,7 @@ $StoryItem-Height: 18px;
         & .title {
             max-width: calc( 100% - 60px );
             display: flex;
+            justify-content: flex-start;
 
             & .draggable {
                 width: 20px;
@@ -69,6 +74,12 @@ $StoryItem-Height: 18px;
                 &:hover {
                     opacity: 1;
                 }
+            }
+
+            & .selected {
+                margin-right: 10px;
+                margin-top: -2px;
+                height: calc( #{$StoryItem-Height} + 4px );
             }
 
             $Caret: calc( #{$StoryItem-Height} - 3px );
@@ -85,7 +96,8 @@ $StoryItem-Height: 18px;
             & p {
                 @include hide-overflow-text;
                 margin-left: 4px;
-                width: 100%;
+                text-align: left;
+                width: $Hierarchy-Width;
                 font-size: calc( #{$StoryItem-Height} - 4px );
                 &:hover {
                     cursor: pointer;
@@ -135,6 +147,11 @@ import InputMessage from "@/logics/utils/input-message";
         "refreshItems"
     ],
     methods: {
+        directoryBorder(): string {
+            const border = `border-right: solid 1px #999;`;
+            if(!this.story.isDir && this.story.depth > 1) return border;
+            return "";
+        },
         itemBorder(): string {
             return `padding-left: 3px; border-left: solid 4px ${this.story.content.color};`;
         },

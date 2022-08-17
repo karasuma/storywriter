@@ -18,7 +18,7 @@
     min-height: calc( 100vh - #{$Header-Height} - #{$Footer-Height} - 2px );
 
     & .hierarchy {
-        width: 260px;
+        width: $Hierarchy-Width;
         background-color: $Base-Color;
     }
 

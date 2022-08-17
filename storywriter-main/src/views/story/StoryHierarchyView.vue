@@ -30,12 +30,6 @@
         width: calc( 100% - 6px );
     }
 
-    & .hierarchy-items {
-        &:hover {
-            background-color: $Hover-Color;
-        }
-    }
-
     & .hierarchy-ctrl {
         margin: 8px 0;
         display: flex;
