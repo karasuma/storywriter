@@ -37,6 +37,41 @@ img {
   -webkit-user-drag: none;
 }
 
+textarea {
+  background-color: transparent;
+  border: solid 1px #444;
+  border-radius: 8px;
+  width: 99%;
+  min-height: 42px;
+  max-height: 250px;
+  padding: 4px;
+  resize: vertical;
+}
+
+textarea:focus {
+  outline: none;
+}
+
+input {
+  background-color: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  border-bottom: solid 1px #444;
+  padding: 2px 3px;
+  opacity: 0.9;
+}
+
+input:hover {
+  cursor: pointer;
+}
+
+input:focus {
+  border-bottom: solid 2px #888;
+  outline: none;
+  opacity: 1;
+}
+
 .selectable {
   opacity: 0.5;
 }

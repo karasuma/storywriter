@@ -3,8 +3,13 @@
         <div class="hierarchy">
             <StoryHierarchyView :root="story" />
         </div>
-        <div class="storyedit">
-
+        <div class="edit">
+            <div v-if="hasEditingStory()">
+                <StoryEditView :storyData="getEditingStory()" @deleteStory="removeStory" />
+            </div>
+            <div v-else class="blank">
+                <img src="@/assets/dark/edit.png" />
+            </div>
         </div>
     </div>
 </template>
@@ -22,20 +27,46 @@
         background-color: $Base-Color;
     }
 
-    & .storyedit {
-        width: auto;
+    & .edit {
+        width: 100%;
+        background-color: $Content-BaseColor;
+
+        & .blank {
+            position: relative;
+            bottom: -10px;
+            left: -5px;
+            @include square-size(50vw);
+            & img {
+                opacity: 0.1;
+                @include square-size(100%);
+            }
+        }
     }
 }
 </style>
 
 <script lang="ts">
-import { Stories } from '@/logics/models/story-data';
+import { Stories, StoryData } from '@/logics/models/story-data';
 import { Options, Vue } from 'vue-class-component';
+import StoryEditView from './StoryEditView.vue';
 import StoryHierarchyView from './StoryHierarchyView.vue';
 
 @Options({
     components: {
-        StoryHierarchyView
+        StoryHierarchyView,
+        StoryEditView
+    },
+    methods: {
+        getEditingStory(): StoryData {
+            return this.story.GetFlattenStories().find((x: Stories) => x.isEditing).content;
+        },
+        hasEditingStory(): boolean {
+            return this.story.GetFlattenStories().findIndex((x: Stories) => x.isEditing) >= 0;
+        },
+        removeStory(id: string): void {
+            const parentID = this.story.GetFlattenStories().find((x: Stories) => x.content.id == id).id;
+            Stories.RemoveStoryFromID(this.story.root, parentID);
+        }
     }
 })
 
@@ -52,6 +83,13 @@ export default class StoryMainView extends Vue {
         const c2 = this.story.AppendStory("Content2");
         c2.isEditing = true;
         this.story.AppendStory("Content3");
+
+        c2.content.color = "#007bbb";
+        c2.content.description = "サンプルの\nストーリー紹介文";
+        const i1 = c2.content.addItem();
+        i1.title = "Sample title";
+        i1.color = "#007b43";
+        i1.addStory("new story");
     }
 }
 </script>

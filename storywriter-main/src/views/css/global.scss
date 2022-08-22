@@ -67,10 +67,10 @@ input {
     border-left: none;
     border-right: none;
     border-bottom: solid 1px $Separator-Color;
-    padding: 2px 3px;
+    padding: 5px 3px;
     opacity: 0.9;
     &:hover {
-        cursor: pointer;
+        cursor: text;
     }
     &:focus {
         border-bottom: solid 2px $Separator-Selected-Color;
@@ -95,4 +95,8 @@ input {
     flex-grow: $grow;
     flex-shrink: $shrink;
     flex-basis: $basis;
+}
+@mixin square-size($size: 16px) {
+    width: $size;
+    height: $size;
 }

@@ -186,12 +186,16 @@ export class StoryData implements IUniqueObject {
     public items: StoryItem[] = new Array<StoryItem>();
     public time = 0;
 
-    public addItem(item?: StoryItem): void {
-        this.items.push(item ?? new StoryItem());
+    public addItem(item?: StoryItem): StoryItem {
+        const additem = item ?? new StoryItem();
+        this.items.push(additem);
+        return additem;
     }
 
     public removeItem(id: string): void {
-        this.items = this.items.filter((x: StoryItem) => x.id !== id);
+        const idx = this.items.findIndex(x => x.id == id);
+        if(idx < 0) return;
+        this.items.splice(idx, 1);
     }
 
     public getItem(id: string): StoryItem {
@@ -216,16 +220,27 @@ export class StoryItem implements IUniqueObject {
     public color = "#383838";
     public stories: StoryContent[] = new Array<StoryContent>();
 
-    public addStory(): void {
-        this.stories.push(new StoryContent());
+    constructor(title?: string) {
+        this.title = title ?? "";
     }
 
-    public removeStory(index: number): void {
-        this.stories.splice(index, 1);
+    public addStory(text?: string): void {
+        this.stories.push(new StoryContent(text));
+    }
+
+    public removeStory(id: string): void {
+        const index = this.stories.findIndex(s => s.id == id);
+        if(index >= 0) {
+            this.stories.splice(index, 1);
+        }
     }
 }
 
 export class StoryContent implements IUniqueObject {
     public id: string = Utils.getUniqueId();
     public text = "";
+
+    constructor(text?: string) {
+        this.text = text ?? "";
+    }
 }

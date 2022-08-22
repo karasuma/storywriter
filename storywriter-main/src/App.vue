@@ -65,7 +65,7 @@ body {
     }
 
     & .main {
-      width: auto;
+      width: calc( 100vw - #{$Menu-Width} );
       overflow-x: hidden;
       overflow-y: scroll;
     }
