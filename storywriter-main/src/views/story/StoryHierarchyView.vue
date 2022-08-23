@@ -112,7 +112,6 @@ export default class StoryHierarchyView extends Vue {
     }
 
     public moveStories(mover: Stories, insert?: Stories): void {
-        console.log(`${mover.content.time}: ${mover.content.caption}, ${mover.depth}`);
         if(insert === undefined) { // Insert for the last
             // move
             this.root.children.push(mover);
@@ -122,7 +121,6 @@ export default class StoryHierarchyView extends Vue {
             // change parent
             mover.parent = this.root;
         } else {
-            console.log(`${insert.content.time}: ${insert.content.caption}, ${insert.depth}`);
             // shift timeline
             this.root.GetFlattenStories()
                 .filter(s => s.content.time >= insert.content.time)
@@ -139,7 +137,6 @@ export default class StoryHierarchyView extends Vue {
         }
         // change depth
         mover.depth = mover.parent.depth + 1;
-        console.log(`${mover.content.time}: ${mover.content.caption}, ${mover.depth}`);
     }
 
     public adjustStories(movedID: string, nextSiblingID: string, nextID: string): void {

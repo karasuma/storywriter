@@ -8,30 +8,34 @@
                     @drop="$emit('ondrop', story.id, $event)">
             <div class="title">
                 <div class="draggable"></div>
-                <div class="selected" :style="[selected(), directoryBorder()]"></div>
+                <div class="selected" :style="selected()"></div>
+                <div class="selected" :style="[leftMargin(), directoryBorder()]"></div>
                 <img src="@/assets/dark/caret.png" @click="toggleExpand()" :style="expandingImg()"/>
-                <p :title="story.content.caption">{{ story.content.caption }}</p>
+                <p @click="toggleExpand()" :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
             <div class="controls">
-                <img title="追加" src="@/assets/dark/add.png" @click="createDialog()" class="selectable" />
+                <img title="編集" src="@/assets/dark/edit.png" @click="createDialog(true)" class="selectable" />
+                <img title="追加" src="@/assets/dark/add.png" @click="createDialog(false)" class="selectable" />
                 <img title="削除" src="@/assets/dark/dispose.png" @click="deleteDialog()" class="selectable" />
             </div>
         </div>
-        <div v-else class="item"
+        <div v-else class="item editable_item"
                     draggable="true"
                     @dragstart="$emit('ondragstart', story.id, $event)"
                     @dragover="$emit('ondragover', story.id, $event)"
                     @dragleave="$emit('ondragleave', story.id)"
                     @drop="$emit('ondrop', story.id, $event)"
+                    @click="editStory(story)"
         >
             <div class="title">
                 <div class="draggable"></div>
-                <div class="selected" :style="[selected(), directoryBorder()]"></div>
+                <div class="selected" :style="selected()"></div>
+                <div class="selected" :style="[leftMargin(), directoryBorder()]"></div>
                 <div class="blank"></div>
                 <p :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
             <div class="controls">
-                <img title="削除" src="@/assets/dark/dispose.png" @click="deleteDialog()" class="selectable" />
+                <div class="blank"></div>
             </div>
         </div>
     </div>
@@ -47,7 +51,7 @@ $StoryItem-Height: 18px;
     padding: 2px 0;
     height: $StoryItem-Height;
 
-    &:hover {
+    & .editable_item:hover {
         background-color: $Hover-Color;
     }
 
@@ -77,8 +81,8 @@ $StoryItem-Height: 18px;
             }
 
             & .selected {
-                margin-right: 10px;
                 margin-top: -2px;
+                margin-right: 2px;
                 height: calc( #{$StoryItem-Height} + 4px );
             }
 
@@ -96,6 +100,7 @@ $StoryItem-Height: 18px;
             & p {
                 @include hide-overflow-text;
                 margin-left: 4px;
+                padding: 2px 0;
                 text-align: left;
                 width: $Hierarchy-Width;
                 font-size: calc( #{$StoryItem-Height} - 4px );
@@ -159,19 +164,26 @@ import InputMessage from "@/logics/utils/input-message";
             return `margin-left: ${this.GetDepthMargin()}px;`;
         },
         selected(): string {
-            const globalcss = "margin-right: 6px; width: 3px;";
-            return `${this.leftMargin()} ${globalcss} background-color: ${this.story.isEditing ? "orange" : "transparent"};`;
+            const globalcss = "margin-right: 6px; min-width: 3px;";
+            return `${globalcss} background-color: ${this.story.isEditing ? "orange" : "transparent"};`;
         },
         appendItem(result: string): void {
-            this.story.AppendStory(result);
+            if(this.rename) {
+                this.story.content.caption = result;
+                return;
+            }
+            this.story.AppendStory(result, this.isDir);
         },
         deleteItem(result: number): void {
             if(result == SystemMessage.MessageResult.OK) {
                 Stories.RemoveStoryFromID(this.story.root, this.story.id);
             }
         },
-        createDialog(): void {
-            this.inputdlg = InputMessage.Create("サブアイテムの追加");
+        createDialog(rename: boolean): void {
+            this.rename = rename;
+            this.inputdlg = InputMessage.Create(
+                rename ? "グループ名の編集" : "サブアイテムの追加",
+                rename ? this.story.content.caption : "");
         },
         deleteDialog(): void {
             const title = `${this.story.content.caption} の削除`;
@@ -183,6 +195,10 @@ import InputMessage from "@/logics/utils/input-message";
         },
         expandingImg(): string {
             return `transform: rotate(${this.story.isExpanding ? 90 : 0}deg);`;
+        },
+        editStory(item: Stories): void {
+            this.story.GetFlattenStories().forEach((x: Stories) => x.isEditing = false);
+            item.isEditing = true;
         }
     },
 })
@@ -191,6 +207,7 @@ export default class StoryHierarchyItemView extends Vue {
     story!: Stories;
     messagedlg = new SystemMessage();
     inputdlg = new InputMessage();
+    rename = false;
 
     public GetDepthMargin(): number {
         return (this.story.depth - 1) * 10; // depth * margin
