@@ -58,12 +58,12 @@ input {
   border-left: none;
   border-right: none;
   border-bottom: solid 1px #444;
-  padding: 2px 3px;
+  padding: 5px 3px;
   opacity: 0.9;
 }
 
 input:hover {
-  cursor: pointer;
+  cursor: text;
 }
 
 input:focus {

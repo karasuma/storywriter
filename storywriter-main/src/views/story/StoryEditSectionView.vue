@@ -1,9 +1,10 @@
 <template>
-<MessageDialog :message="message" :result="msgResult" />
+    <MessageDialog :message="message" :result="msgResult" />
+    <ColorDialog :showTrigger="colortrig" :result="colorResult" />
     <div class="section" :style="bgColor()">
         <div class="section__controls">
             <input type="text" placeholder="..." spellcheck="false" v-model="item.title" />
-            <img class="selectable" src="@/assets/dark/paint.png" />
+            <img class="selectable" src="@/assets/dark/paint.png" @click="changeColor()" />
             <img class="selectable" src="@/assets/dark/dispose.png" @click="askDelete()" />
         </div>
 
@@ -22,6 +23,12 @@
 
         <div class="section__add">
             <img class="selectable" src="@/assets/dark/add.png" @click="addStory()" />
+            <div class="section__add__move">
+                <img class="selectable" src="@/assets/dark/arrow.png" style="transform: rotate(90deg);"
+                @click="moveStoryItem(true)" />
+                <img class="selectable" src="@/assets/dark/arrow.png" style="transform: rotate(-90deg);"
+                @click="moveStoryItem(false)" />
+            </div>
         </div>
     </div>
 </template>
@@ -38,6 +45,7 @@ hr {
     padding: 10px;
     width: 90%;
     border-radius: 18px;
+    box-shadow: 0 0 8px #111;
     & * {
         border-radius: 8px;
         @include non-user-select;
@@ -97,6 +105,15 @@ hr {
         margin: 8px;
         display: flex;
         justify-content: center;
+        &__move {
+            height: 30px;
+            margin-left: 10px;
+            display: flex;
+            & img {
+                @include square-size(30px);
+                margin: 0 3px;
+            }
+        }
     }
 }
 </style>
@@ -107,10 +124,13 @@ import { Utils } from '@/logics/models/utils';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Vue, Options } from 'vue-class-component';
 import MessageDialog from '../dialogs/MessageDialog.vue';
+import ColorMessage from '@/logics/utils/color-message';
+import ColorDialog from '../dialogs/ColorDialog.vue';
 
 @Options({
     components: {
-        MessageDialog
+        MessageDialog,
+        ColorDialog
     },
     props: {
         item: {
@@ -136,10 +156,16 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
                 true
             );
         },
+        changeColor(): void {
+            this.colortrig = ColorMessage.Show(ColorMessage.Type.Dark);
+        },
         msgResult(result: number): void {
             if(result == SystemMessage.MessageResult.OK) {
                 this.$emit('removeSelf', this.item.id);
             }
+        },
+        colorResult(color: string): void {
+            this.item.color = color;
         },
         isTop(id: string): boolean {
             return this.item.stories.findIndex((x: StoryContent) => x.id == id) == 0;
@@ -155,6 +181,25 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
             const current = this.item.stories[currentID];
             this.item.stories.splice(currentID, 1);
             this.item.stories.splice(neighborID, 0, current);
+        },
+        moveStoryItem(id: string, up: boolean): void {
+            const idx = this.item.stories.findIndex((x: StoryContent) => x.id == id);
+            const item = this.item.stories.find((x: StoryContent) => x.id == id);
+            if(up) {
+                this.item.stories.splice(idx - 1, 0, item);
+                this.item.stories.splice(idx + 1, 1);
+            } else {
+                this.item.stories.splice(idx + 1, 0, item);
+                this.item.stories.splice(idx, 1);
+            }
+        },
+        canMoveStoryItem(id: string, up: boolean): boolean {
+            const idx = this.item.stories.findIndex((x: StoryContent) => x.id == id);
+            if(up) {
+                return idx > 0;
+            } else {
+                return idx < this.item.stories.length - 1;
+            }
         }
     },
     emits: [
@@ -165,5 +210,6 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
 export default class StoryEditSectionView extends Vue {
     item!: StoryItem;
     message = new SystemMessage();
+    colortrig = new ColorMessage();
 }
 </script>

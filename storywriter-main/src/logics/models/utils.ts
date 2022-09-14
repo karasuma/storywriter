@@ -63,6 +63,10 @@ export class Utils {
         const time = `${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
         return time;
     }
+
+    static random(max = 1): number {
+        return Math.floor(Math.random() * max);
+    }
 }
 
 export class Enumerable {

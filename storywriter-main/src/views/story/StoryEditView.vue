@@ -1,9 +1,10 @@
 <template>
     <MessageDialog :message="message" :result="msgResult" />
+    <ColorDialog :showTrigger="colortrig" :result="colorResult" />
     <div class="storyedit" :style="dataColor()">
         <div class="storyedit__title">
             <input type="text" placeholder="..." spellcheck="false" v-model="storyData.caption" />
-            <img class="selectable" src="@/assets/dark/paint.png" />
+            <img class="selectable" src="@/assets/dark/paint.png" @click="changeColor()" />
             <img class="selectable" src="@/assets/dark/dispose.png" @click="removeConfirm()" />
         </div>
 
@@ -73,15 +74,18 @@
 
 <script lang="ts">
 import { StoryData } from '@/logics/models/story-data';
+import ColorMessage from '@/logics/utils/color-message';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Vue, Options } from 'vue-class-component';
+import ColorDialog from '../dialogs/ColorDialog.vue';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 import StoryEditSectionView from './StoryEditSectionView.vue';
 
 @Options({
     components: {
         StoryEditSectionView,
-        MessageDialog
+        MessageDialog,
+        ColorDialog
     },
     props: {
         storyData: {
@@ -107,6 +111,9 @@ import StoryEditSectionView from './StoryEditSectionView.vue';
                 this.$emit("deleteStory", this.storyData.id);
             }
         },
+        colorResult(color: string): void {
+            this.storyData.color = color;
+        },
         removeConfirm(): void {
             this.message = SystemMessage.Create(
                 "削除の確認",
@@ -114,6 +121,9 @@ import StoryEditSectionView from './StoryEditSectionView.vue';
                 SystemMessage.MessageType.Normal,
                 true
             );
+        },
+        changeColor(): void {
+            this.colortrig = ColorMessage.Show(ColorMessage.Type.Light);
         }
     },
     emits: [
@@ -124,5 +134,6 @@ import StoryEditSectionView from './StoryEditSectionView.vue';
 export default class StoryEditView extends Vue {
     storyData!: StoryData;
     message = new SystemMessage();
+    colortrig = new ColorMessage();
 }
 </script>

@@ -121,6 +121,11 @@ export class Stories implements IUniqueObject {
         return this.root.flattenStories.find((x: Stories) => x.isEditing);
     }
 
+    public Edit(): void {
+        this.root.flattenStories.forEach(x => x.isEditing = false);
+        this.isEditing = true;
+    }
+
     public IsVisible(): boolean {
         let parent = this.parent;
         while(parent.content.caption != Stories.RootName) {

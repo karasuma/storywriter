@@ -119,7 +119,8 @@ export default class StoryHierarchyView extends Vue {
             const idx = mover.parent.children.findIndex(s => s.id == mover.id);
             mover.parent.children.splice(idx, 1);
             // change parent
-            mover.parent = this.root;
+            const hierParent = this.root.GetFlattenStories()[this.root.GetFlattenStories().length - 1];
+            mover.parent = hierParent.isDir ? hierParent : hierParent.parent;
         } else {
             // shift timeline
             this.root.GetFlattenStories()

@@ -3,6 +3,7 @@
   <KernelPanic />
   <div id="modal-inputbox"></div>
   <div id="modal-msgbox"></div>
+  <div id="modal-colorbox"></div>
 
   <!-- Main contents -->
   <div class="mainwrapper">
@@ -12,11 +13,12 @@
 
     <div class="contents">
       <div class="menu">
-        <MenuView />
+        <MenuView :selection="viewState" />
       </div>
 
       <div class="main">
-        <StoryMainView />
+        <StoryMainView v-show="showMe(1)" :vm="vm" />
+        <TimelineView v-show="showMe(2)" :vm="vm" :selection="viewState" />
       </div>
     </div>
 
@@ -67,7 +69,7 @@ body {
     & .main {
       width: calc( 100vw - #{$Menu-Width} );
       overflow-x: hidden;
-      overflow-y: scroll;
+      overflow-y: hidden;
     }
   }
 
@@ -85,12 +87,15 @@ body {
 
 <script lang="ts">
 import { Options, Vue } from 'vue-class-component';
+import { StoryWriterObjectSample } from './logics/models/storywriter-object';
 import KernelPanic from './views/dialogs/KernelPanic.vue';
 import ControlView from '@/views/controls/Control.vue';
 import MenuView from '@/views/menu/Menu.vue';
-import StoryMainView from './views/story/StoryMainView.vue';
 import InputDialog from './views/dialogs/InputDialog.vue';
 import MessageDialog from './views/dialogs/MessageDialog.vue';
+import ViewSelection from './logics/models/view-selection';
+import StoryMainView from './views/story/StoryMainView.vue';
+import TimelineView from './views/timeline/TimelineView.vue';
 
 @Options({
   components: {
@@ -99,14 +104,19 @@ import MessageDialog from './views/dialogs/MessageDialog.vue';
     MessageDialog,
     ControlView,
     MenuView,
-    StoryMainView
+    StoryMainView,
+    TimelineView
   },
   methods: {
-
+    showMe(view: number): boolean {
+      return this.viewState.currentView == view;
+    }
   }
 })
 
 export default class App extends Vue {
+  viewState = new ViewSelection();
+  vm = new StoryWriterObjectSample()
 }
 
 </script>

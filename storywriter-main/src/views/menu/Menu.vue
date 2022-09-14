@@ -1,7 +1,7 @@
 <template>
     <div id="Menu">
-        <img class="selectable" src="@/assets/dark/edit.png" />
-        <img class="selectable" src="@/assets/dark/calendar.png" />
+        <img @click="changeView(1)" :style="borderCss(1)" class="selectable" src="@/assets/dark/edit.png" />
+        <img @click="changeView(2)" :style="borderCss(2)" class="selectable" src="@/assets/dark/calendar.png" />
         <img class="selectable" src="@/assets/dark/person.png" />
         <img class="selectable" src="@/assets/dark/chat.png" />
         <img class="selectable" src="@/assets/dark/world.png" />
@@ -26,19 +26,34 @@
         user-select: none;
         cursor: pointer;
     }
-    & *:first-child {
-        opacity: 1;
-        border-left: solid 2px orange;
-    }
 }
 </style>
 
 <script lang="ts">
+import ViewSelection from '@/logics/models/view-selection';
 import { Options, Vue } from 'vue-class-component';
 
 @Options({
-
+    props: {
+        selection: {
+            type: ViewSelection,
+            required: true
+        }
+    },
+    methods: {
+        changeView(view: number): void {
+            this.selection.ChangeCurrentView(view);
+        },
+        borderCss(view: number): string {
+            if(view == this.selection.currentView) {
+                return "opacity: 1; border-left: solid 2px orange;"
+            }
+            return ""
+        }
+    }
 })
 
-export default class MenuView extends Vue { }
+export default class MenuView extends Vue {
+    selection!: ViewSelection;
+}
 </script>
