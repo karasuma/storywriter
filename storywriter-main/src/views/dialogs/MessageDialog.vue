@@ -143,26 +143,22 @@ import { PropType } from '@vue/runtime-core';
             this.message.visible = false;
         },
         Reject(): void {
-            if(!this.showNo()) {
-                this.result(SystemMessage.MessageResult.None);
-            } else {
+            if(this.showNo()) {
                 this.result(SystemMessage.MessageResult.No);
+                this.message.visible = false;
             }
-            this.message.visible = false;
         },
         Cancel(): void {
-            if(!this.showNo()) {
-                this.result(SystemMessage.MessageResult.None);
-            } else {
+            if(this.showCancel()) {
                 this.result(SystemMessage.MessageResult.Cancel);
+                this.message.visible = false;
             }
-            this.message.visible = false;
         },
         showNo(): boolean {
             return this.message.status != SystemMessage.MessageType.Info;
         },
         showCancel(): boolean {
-            return this.message.status != SystemMessage.MessageType.Info && !this.message.strictly;
+            return this.showNo() && !this.message.strictly;
         }
     },
     computed: {

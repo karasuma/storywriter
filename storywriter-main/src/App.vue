@@ -1,6 +1,7 @@
 <template>
   <!-- Teleport targets -->
   <KernelPanic />
+  <div id="modal-imgviewer"></div>
   <div id="modal-inputbox"></div>
   <div id="modal-msgbox"></div>
   <div id="modal-colorbox"></div>
@@ -17,8 +18,9 @@
       </div>
 
       <div class="main">
-        <StoryMainView v-show="showMe(1)" :vm="vm" />
-        <TimelineView v-show="showMe(2)" :vm="vm" :selection="viewState" />
+        <StoryMainView v-if="showMe(1)" :vm="vm" />
+        <TimelineView v-if="showMe(2)" :vm="vm" :selection="viewState" />
+        <DictionaryView v-if="showMe(3)" :vm="vm" />
       </div>
     </div>
 
@@ -96,6 +98,7 @@ import MessageDialog from './views/dialogs/MessageDialog.vue';
 import ViewSelection from './logics/models/view-selection';
 import StoryMainView from './views/story/StoryMainView.vue';
 import TimelineView from './views/timeline/TimelineView.vue';
+import DictionaryView from './views/dictionary/DictionaryView.vue';
 
 @Options({
   components: {
@@ -105,7 +108,8 @@ import TimelineView from './views/timeline/TimelineView.vue';
     ControlView,
     MenuView,
     StoryMainView,
-    TimelineView
+    TimelineView,
+    DictionaryView
   },
   methods: {
     showMe(view: number): boolean {

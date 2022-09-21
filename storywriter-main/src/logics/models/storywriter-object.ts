@@ -1,7 +1,9 @@
+import { Dictionaries } from "./dictionary-data";
 import { Stories } from "./story-data";
 
 export class StoryWriterObject {
     public story = Stories.Create();
+    public dict = Dictionaries.Create();
 }
 
 export class StoryWriterObjectSample extends StoryWriterObject {
@@ -25,8 +27,16 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         i1.addStory("new story");
     }
 
+    createDict(): void {
+        this.dict.Add("射命丸　文");
+        const d = this.dict.Add("犬走　椛", "妖怪の山に住む白狼天狗。哨戒、警邏業務を主に行う。下っ端気質のため、文さんに色々といじられる。");
+        d.isEditing = true;
+        this.dict.Add("姫海棠　はたて");
+    }
+
     constructor() {
         super();
         this.createStory();
+        this.createDict();
     }
 }

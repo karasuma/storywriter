@@ -7,6 +7,12 @@ export class Defs {
         Reject: 2
     } as const;
 
+    public static readonly ResourceType = {
+        None: 0,
+        Image: 1,
+        Audio: 2
+    } as const;
+
     public static readonly definedDarkColors: string[] = [
         "#434343", // Gray
         "#582020", // Red
