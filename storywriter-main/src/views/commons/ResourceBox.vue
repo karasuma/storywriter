@@ -41,9 +41,6 @@ import ImageViewer from './ImageViewer.vue';
         isImage(): boolean {
             return this.resource.type == Defs.ResourceType.Image;
         },
-        boxSizeCss(): string {
-            return `width: ${this.boxSize}; height: ${this.boxSize};`;
-        },
         chooseFile(self?: boolean): void {
             this.changeSelf = self ?? false;
             this.$refs.inputfile.click();
@@ -87,6 +84,9 @@ import ImageViewer from './ImageViewer.vue';
         }
     },
     computed: {
+        boxSizeCss: function(): string {
+            return `width: ${this.boxSize}; height: ${this.boxSize};`;
+        },
         boxBorderCss: function(): string {
             if(this.isHovering) {
                 return `border: dashed 3px #aaa;`;
@@ -139,7 +139,7 @@ export default class ResourceBox extends Vue {
 <template>
     <ImageViewer :resource="resourceView" />
     <MessageDialog :message="message" :result="msgResult" />
-    <div id="ResourceBox" :style="boxSizeCss()">
+    <div id="ResourceBox" :style="boxSizeCss">
         <input
             style="display: none;"
             ref="inputfile"
@@ -153,7 +153,7 @@ export default class ResourceBox extends Vue {
             <img src="@/assets/dark/close.png" class="image__close selectable" @click="removeClicked()" />
             <img src="@/assets/dark/change.png" class="image__change selectable" @click="chooseFile(true)" />
         </div>
-        <div v-else class="drop selectable" :style="boxBorderCss"
+        <div v-else class="drop selectable" :style="[boxBorderCss, boxSizeCss]"
             @click="chooseFile()"
             @dragover.prevent="setHovering(true)"
             @dragleave.prevent="setHovering(false)"
@@ -213,7 +213,6 @@ export default class ResourceBox extends Vue {
 
     & .drop {
         border-radius: 12px;
-        padding: 3px;
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -222,11 +221,12 @@ export default class ResourceBox extends Vue {
 
         &__main {
             height: auto;
-            width: 70%;
+            width: 50%;
+            margin: 8px;
         }
         &__desc {
             height: auto;
-            margin-top: 6px;
+            margin: 3px;
             max-width: 100%;
             text-align: center;
             @include hide-overflow-text;
