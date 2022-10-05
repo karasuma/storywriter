@@ -21,6 +21,7 @@
         <StoryMainView v-if="showMe(1)" :vm="vm" />
         <TimelineView v-if="showMe(2)" :vm="vm" :selection="viewState" />
         <DictionaryView v-if="showMe(3)" :vm="vm" />
+        <ActorView v-if="showMe(4)" :vm="vm" />
       </div>
     </div>
 
@@ -99,6 +100,7 @@ import ViewSelection from './logics/models/view-selection';
 import StoryMainView from './views/story/StoryMainView.vue';
 import TimelineView from './views/timeline/TimelineView.vue';
 import DictionaryView from './views/dictionary/DictionaryView.vue';
+import ActorView from './views/actors/ActorView.vue';
 
 @Options({
   components: {
@@ -109,7 +111,8 @@ import DictionaryView from './views/dictionary/DictionaryView.vue';
     MenuView,
     StoryMainView,
     TimelineView,
-    DictionaryView
+    DictionaryView,
+    ActorView
   },
   methods: {
     showMe(view: number): boolean {

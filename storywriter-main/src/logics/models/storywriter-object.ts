@@ -1,9 +1,11 @@
+import { Actors } from "./actor-data";
 import { Dictionaries } from "./dictionary-data";
 import { Stories } from "./story-data";
 
 export class StoryWriterObject {
     public story = Stories.Create();
     public dict = Dictionaries.Create();
+    public actor = Actors.Create();
 }
 
 export class StoryWriterObjectSample extends StoryWriterObject {
@@ -34,9 +36,21 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         this.dict.Add("姫海棠　はたて");
     }
 
+    createActor(): void {
+        this.actor.Add("射命丸 文");
+        const momiji = this.actor.Add("犬走 椛");
+        momiji.description = "下っ端天狗。つよい。";
+        momiji.isEditing = true;
+        const d = momiji.AddDetail("特徴");
+        d.description = "刀振るのがうまい";
+        const d2 = momiji.AddDetail("性格");
+        d2.description = "真面目";
+    }
+
     constructor() {
         super();
         this.createStory();
         this.createDict();
+        this.createActor();
     }
 }
