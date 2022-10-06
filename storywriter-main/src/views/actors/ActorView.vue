@@ -83,6 +83,9 @@ import ActorListView from './ActorListView.vue';
         },
         addDetail(): void {
             this.editingActor().AddDetail();
+        },
+        removeDetail(d: ActorDetail): void {
+            this.editingActor().RemoveDetail(d.id);
         }
     }
 })
@@ -136,6 +139,9 @@ export default class ActorView extends Vue {
                     </textarea>
                     <div class="actorView__detail__details-item"
                          v-for="d in editingActor().details" :id="d.id" :key="d.id">
+                        <div class="actorView__detail__details-item-dispose">
+                            <img class="selectable" src="@/assets/dark/dispose.png" @click="removeDetail(d)" />
+                        </div>
                          <div class="actorView__detail__details-item-arrow">
                             <img src="@/assets/dark/arrow.png" class="selectable" style="transform: rotate(90deg);"
                                  :style="isTopDetailCss(d)" @click="upDetailClicked(d)" />
@@ -269,6 +275,17 @@ export default class ActorView extends Vue {
                     align-items: center;
                     border-radius: 12px;
                     border: solid 1px $Dim-Border-Color;
+                    position: relative;
+
+                    &-dispose {
+                        position: absolute;
+                        top: 10px;
+                        left: 10px;
+                        @include square-size(21px);
+                        & img {
+                            @include square-size(21px);
+                        }
+                    }
 
                     &-arrow {
                         margin: 12px;
