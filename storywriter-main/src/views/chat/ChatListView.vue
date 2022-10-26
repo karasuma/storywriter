@@ -39,10 +39,13 @@ import { Options, Vue } from 'vue-class-component';
                 .filter((x, i, a) => a.indexOf(x) === i)
                 .map(id => this.vm.actor.actors.find((a: ActorData) => a.id == id)?.name ?? "")
                 .filter((s: string) => s.length > 0);
-            if(actors.length > 0 && c.description.length > 0) {
-                return `${actors.length}人: ${c.description}`;
+            if(c.description.length + actors.length == 0) {
+                return "";
             }
-            return actors.join(", ");
+            if(c.description.length == 0 && actors.length > 0) {
+                return actors.join(", ");
+            }
+            return `${actors.length}人: ${c.description}`;
         },
         storyname(c: ChatItem): string {
             const story = this.vm.story.GetFlattenStories().find((x: Stories) => x.content.id == c.storyId);
@@ -68,12 +71,27 @@ import { Options, Vue } from 'vue-class-component';
     },
     computed: {
         filteredChats: function(): Array<ChatItem> {
-            if(this.searchword.length == 0) {
-                return this.vm.chat.chats;
+            let chats = this.vm.chat.chats;
+            if(this.selectStory.length > 0) {
+                const storyId = this.vm.story.GetFlattenStories()
+                    .filter((x: Stories) => !x.isDir)
+                    .find((x: Stories) => x.content.caption == this.selectStory)
+                    .content.id; 
+                chats = chats.filter((x: ChatItem) => x.storyId == storyId);
+                console.log(`${this.selectStory}, ${storyId}`);
             }
-            return this.vm.chat.chats
+
+            if(this.searchword.length == 0) {
+                return chats;
+            }
+            return chats
                 .filter((x: ChatItem) => x.GetAllChars().indexOf(this.searchword) >= 0);
         },
+        storyNameList: function(): Array<string> {
+            return this.vm.story.GetFlattenStories()
+                    .filter((x: Stories) => !x.isDir)
+                    .map((x: Stories) => x.content.caption);
+        }
     },
     emits: [
         "selectchanged"
@@ -83,6 +101,7 @@ import { Options, Vue } from 'vue-class-component';
 export default class ChatListView extends Vue {
     vm!: StoryWriterObject;
     public searchword = "";
+    public selectStory = "";
 
     public GetActor(id: string): ActorData {
         const actor = this.vm.actor.actors.find(x => x.id == id);
@@ -92,8 +111,9 @@ export default class ChatListView extends Vue {
                 "ChatListView.vue[GetActor(id: string): ActorData]: Invalid actor ID, Actor not found.",
                 ErrorHandler.ErrorLevel.Failed
             );
+            return new ActorData("鵺"); // Pseudo actor
         }
-        return new ActorData("鵺");
+        return actor;   
     }
 
     public HasActor(id: string): boolean {
@@ -105,8 +125,16 @@ export default class ChatListView extends Vue {
 <template>
     <div id="ChatList">
         <div class="search">
-            <img src="@/assets/dark/search.png" />
-            <input type="text" spellcheck="false" placeholder="会話の一部を入力..." v-model="searchword" />
+            <div class="search__text">
+                <img src="@/assets/dark/search.png" />
+                <input type="text" spellcheck="false" placeholder="会話の一部を入力..." v-model="searchword" />
+            </div>
+            <select name="stories" v-model="selectStory">
+                <option value="">...</option>
+                <option v-for="name in storyNameList" :key="name" :value="name">
+                    {{ name }}
+                </option>
+            </select>
         </div>
 
         <div class="chat selectable" v-for="c in filteredChats" :key="c.id" :id="c.id"
@@ -132,20 +160,32 @@ export default class ChatListView extends Vue {
     background-color: $Base-Color;
 
     & .search {
-        height: 60px;
-        min-height: 60px;
-        margin: 0 16px;
+        height: 80px;
+        min-height: 80px;
+        margin: 6px 16px;
         display: flex;
-        align-items: center;
-        justify-content: space-around;
-
-        & img {
-            @include square-size(21px);
-            margin: 0 8px;
+        flex-direction: column;
+        
+        &__text {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            & img {
+                @include square-size(21px);
+                margin: 0 8px;
+            }
+            & input {
+                width: calc(100% - 48px);
+                height: 21px;
+            }
         }
-        & input {
-            width: calc(100% - 48px);
-            height: 21px;
+
+        & select {
+            margin: 12px 2px;
+            width: 100%;
+            & option {
+                color: $Base-Color;
+            }
         }
     }
 

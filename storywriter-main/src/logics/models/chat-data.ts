@@ -49,7 +49,6 @@ export class ChatItem implements IUniqueObject {
     public MoveTalk(talk: ChatTalker, target: ChatTalker): void {
         const talkIdx = this.timeline.findIndex(x => x.id == talk.id);
         const tgtIdx = this.timeline.findIndex(x => x.id == target.id);
-        console.log(`mv: [${talkIdx}]${this.timeline[talkIdx].text.substring(0, 8)}...\nto: [${tgtIdx}]${this.timeline[tgtIdx].text.substring(0, 8)}`)
 
         if(talkIdx == -1 || tgtIdx == -1 || talkIdx == tgtIdx) return;
 
@@ -65,9 +64,7 @@ export class ChatItem implements IUniqueObject {
     }
 
     public GetAllChars(): string {
-        let str = "";
-        this.timeline.forEach(t => str += t.text);
-        return str;
+        return this.timeline.map(x => x.text).join("");
     }
 }
 
