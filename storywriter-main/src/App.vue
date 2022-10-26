@@ -22,6 +22,7 @@
         <TimelineView v-if="showMe(2)" :vm="vm" :selection="viewState" />
         <DictionaryView v-if="showMe(3)" :vm="vm" />
         <ActorView v-if="showMe(4)" :vm="vm" />
+        <ChatView v-if="showMe(5)" :vm="vm" />
       </div>
     </div>
 
@@ -101,6 +102,7 @@ import StoryMainView from './views/story/StoryMainView.vue';
 import TimelineView from './views/timeline/TimelineView.vue';
 import DictionaryView from './views/dictionary/DictionaryView.vue';
 import ActorView from './views/actors/ActorView.vue';
+import ChatView from './views/chat/ChatView.vue';
 
 @Options({
   components: {
@@ -112,7 +114,8 @@ import ActorView from './views/actors/ActorView.vue';
     StoryMainView,
     TimelineView,
     DictionaryView,
-    ActorView
+    ActorView,
+    ChatView
   },
   methods: {
     showMe(view: number): boolean {

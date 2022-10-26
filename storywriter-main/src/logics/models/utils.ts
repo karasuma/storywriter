@@ -1,8 +1,11 @@
 export class Utils {
     static getUniqueId(seed = 0): string {
-        const power = seed <= 0 ? (2007 * Math.random()) : seed;
-        return new Date().getTime().toString(16) 
-            + Math.floor(power * Math.random()).toString(16);
+        if(seed < 0) seed *= -1;
+        const power = (seed + 89010163) * Math.random();
+        const head = Date.now().toString(16);
+        const middle = Math.floor(Date.now() * Math.random()).toString(16).substring(0, 8);
+        const foot = Math.floor(power * Math.random()).toString(16);
+        return [head, middle, foot].join("");
     }
 
     static sortCondition(prev: number, curr: number, descending = false): number {
@@ -14,9 +17,9 @@ export class Utils {
         return 0;
     }
 
-    static hex2rgb(hex: string): [number, number, number] {
+    static hex2rgb(hexstr: string): [number, number, number] {
         // Validate
-        const hexes = hex.substr(1).toUpperCase();
+        const hexes = hexstr.substring(1).toUpperCase();
         if(hexes.length != 6 || hexes.match(/[^0-9A-F]/)) return [-1, -1, -1];
 
         // Convert

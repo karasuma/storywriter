@@ -4,7 +4,7 @@
         <img @click="changeView(2)" :style="borderCss(2)" class="selectable" src="@/assets/dark/calendar.png" />
         <img @click="changeView(3)" :style="borderCss(3)" class="selectable" src="@/assets/dark/dict.png" />
         <img @click="changeView(4)" :style="borderCss(4)" class="selectable" src="@/assets/dark/person.png" />
-        <img class="selectable" src="@/assets/dark/chat.png" />
+        <img @click="changeView(5)" :style="borderCss(5)" class="selectable" src="@/assets/dark/chat.png" />
         <img class="selectable" src="@/assets/dark/world.png" />
         <img class="selectable" src="@/assets/dark/memo.png" />
     </div>

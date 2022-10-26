@@ -1,4 +1,5 @@
 import { Actors } from "./actor-data";
+import { Chats } from "./chat-data";
 import { Dictionaries } from "./dictionary-data";
 import { Stories } from "./story-data";
 
@@ -6,6 +7,7 @@ export class StoryWriterObject {
     public story = Stories.Create();
     public dict = Dictionaries.Create();
     public actor = Actors.Create();
+    public chat = Chats.Create();
 }
 
 export class StoryWriterObjectSample extends StoryWriterObject {
@@ -39,6 +41,7 @@ export class StoryWriterObjectSample extends StoryWriterObject {
     createActor(): void {
         this.actor.Add("射命丸 文");
         const momiji = this.actor.Add("犬走 椛");
+        this.actor.Add("はたて");
         momiji.description = "下っ端天狗。つよい。";
         momiji.isEditing = true;
         const d = momiji.AddDetail("特徴");
@@ -47,10 +50,30 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         d2.description = "真面目";
     }
 
+    createChat(): void {
+        const story1 = this.story.GetFlattenStories().find(x => x.content.caption == "Content1");
+        const story2 = this.story.GetFlattenStories().find(x => x.content.caption == "Content2");
+        const aya = this.actor.actors[0];
+        const momiji = this.actor.actors[1];
+        const hatate = this.actor.actors[2];
+        this.chat.Add(story1?.id);
+        const chat = this.chat.Add(story2?.id);
+        chat.isEditing = true;
+        let ayatalk = "ブン屋の本懐は情報の鮮度！あらゆる情報を多角的に観察し、最もインパクトが強い事件を選んで";
+        ayatalk += "それをセンセーショナルに報道する！そうすると世の中が世界の出来事に目を向け始め、そして遂には";
+        ayatalk += "新聞の購読者数もうなぎ登り！ってわけです！";
+        chat.AddTalk(aya.id, ayatalk);
+        chat.AddTalk(momiji.id, "さすが、ゴシップ専門記者は言うことが違いますね。");
+        chat.AddTalk(hatate.id, "な");
+        chat.AddTalk(aya.id, "は？");
+
+    }
+
     constructor() {
         super();
         this.createStory();
         this.createDict();
         this.createActor();
+        this.createChat();
     }
 }

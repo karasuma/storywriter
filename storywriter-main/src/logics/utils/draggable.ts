@@ -1,5 +1,6 @@
 export default class DragElement {
     public static BorderColor = "#ba2636";
+    public static NoNextElement = "No-Next-Element";
 
     private document: Document;
 
@@ -7,8 +8,13 @@ export default class DragElement {
         this.document = document;
     }
 
-    public DragStart(ID: string, event: DragEvent): void {
+    public DragStart(ID: string, event: DragEvent, dragElement?: Element): void {
         event.dataTransfer?.setData("text/plain", ID);
+        if(dragElement !== undefined) {
+            event.dataTransfer?.setDragImage(dragElement, 0, 0);
+        } else {
+            event.dataTransfer?.setDragImage(event.target as Element, 0, 0);
+        }
     }
 
     public DragOver(ID: string, event: DragEvent): void {
@@ -45,15 +51,16 @@ export default class DragElement {
         const rect = el.getBoundingClientRect();
         if((event.clientY - rect.top) < (el.clientHeight * 0.5)) {
             // Drop upside of the target
-            console.log(`${el?.className}, ${el?.id}`);
+            //console.log(`upside: ${el?.className}, ${el?.id}`);
             el.parentNode?.insertBefore(draggedEl, el);
             dragged(recvID, el.id);
         } else {
             // Drop downside of the target
             const nextEl = el.nextElementSibling;
-            console.log(`${nextEl?.className}, ${nextEl?.id}`);
+            //console.log(`downside: ${nextEl?.className}, ${nextEl?.id ?? "x"}`);
             el.parentNode?.insertBefore(draggedEl, nextEl);
-            dragged(recvID, nextEl?.id ?? "");
+            const nextId = nextEl?.id ?? "";
+            dragged(recvID, nextId.length != 0 ? nextId : DragElement.NoNextElement);
         }
         this.DragLeave(ID);
     }
