@@ -3,7 +3,7 @@ import { ActorData } from '@/logics/models/actor-data';
 import { ChatItem } from '@/logics/models/chat-data';
 import { Defs } from '@/logics/models/defs';
 import { ItemResource } from '@/logics/models/resource';
-import { Stories } from '@/logics/models/story-data';
+import { Stories, StoryData } from '@/logics/models/story-data';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { Utils } from '@/logics/models/utils';
 import ErrorHandler from '@/logics/utils/error-handler';
@@ -67,6 +67,14 @@ import { Options, Vue } from 'vue-class-component';
             }
             const rgb = Utils.hex2rgb(story.content.color);
             return `${basecss} rgba(${rgb.join(",")},0.2);`;
+        },
+        optionColorCss(s: StoryData): string {
+            const basecss = "background-color:";
+            if(s.color.length == 0 || s.color == "transparent") {
+                return `${basecss} transparent;`;
+            }
+            const rgb = Utils.hex2rgb(s.color);
+            return `${basecss} rgba(${rgb.join(",")},0.3);`;
         }
     },
     computed: {
@@ -78,7 +86,6 @@ import { Options, Vue } from 'vue-class-component';
                     .find((x: Stories) => x.content.caption == this.selectStory)
                     .content.id; 
                 chats = chats.filter((x: ChatItem) => x.storyId == storyId);
-                console.log(`${this.selectStory}, ${storyId}`);
             }
 
             if(this.searchword.length == 0) {
@@ -87,10 +94,10 @@ import { Options, Vue } from 'vue-class-component';
             return chats
                 .filter((x: ChatItem) => x.GetAllChars().indexOf(this.searchword) >= 0);
         },
-        storyNameList: function(): Array<string> {
+        storyNameList: function(): Array<StoryData> {
             return this.vm.story.GetFlattenStories()
                     .filter((x: Stories) => !x.isDir)
-                    .map((x: Stories) => x.content.caption);
+                    .map((x: Stories) => x.content);
         }
     },
     emits: [
@@ -131,8 +138,9 @@ export default class ChatListView extends Vue {
             </div>
             <select name="stories" v-model="selectStory">
                 <option value="">...</option>
-                <option v-for="name in storyNameList" :key="name" :value="name">
-                    {{ name }}
+                <option v-for="story in storyNameList" :key="story.id" :value="story.caption"
+                        :style="optionColorCss(story)">
+                    {{ story.caption }}
                 </option>
             </select>
         </div>

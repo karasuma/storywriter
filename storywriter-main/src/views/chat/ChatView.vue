@@ -2,8 +2,9 @@
 <script lang="ts">
 import { ActorData } from '@/logics/models/actor-data';
 import { ChatItem, ChatTalker } from '@/logics/models/chat-data';
-import { Stories } from '@/logics/models/story-data';
+import { Stories, StoryData } from '@/logics/models/story-data';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
+import { Utils } from '@/logics/models/utils';
 import DragElement from '@/logics/utils/draggable';
 import { Options, Vue } from 'vue-class-component';
 import ChatActorView from './ChatActorView.vue';
@@ -102,13 +103,20 @@ import ChatListView from './ChatListView.vue';
                 this.dragging = false;
             });
         },
+        optionColorCss(s: StoryData): string {
+            const basecss = "background-color:";
+            if(s.color.length == 0 || s.color == "transparent") {
+                return `${basecss} transparent;`;
+            }
+            const rgb = Utils.hex2rgb(s.color);
+            return `${basecss} rgba(${rgb.join(",")},0.3);`;
+        }
     },
     computed: {
-        storyNameList: function(): Array<string> {
-            const names: Array<string> = this.vm.story.GetFlattenStories()
+        storyNameList: function(): Array<StoryData> {
+            return this.vm.story.GetFlattenStories()
                     .filter((x: Stories) => !x.isDir)
-                    .map((x: Stories) => x.content.caption);
-            return names;
+                    .map((x: Stories) => x.content);
         },
         actorList: function(): Array<string> {
             return this.vm.actor.actors.map((x: ActorData) => x.name);
@@ -165,8 +173,9 @@ export default class ChatView extends Vue {
             <div class="mainchat__header">
                 <select name="stories" id="stories-selector" v-model="selectStory" @change="setStory">
                     <option value="">...</option>
-                    <option v-for="name in storyNameList" :key="name" :value="name">
-                        {{ name }}
+                    <option v-for="story in storyNameList" :key="story.id" :value="story.caption"
+                            :style="optionColorCss(story)">
+                        {{ story.caption }}
                     </option>
                 </select>
                 <input type="text" spellcheck="false" placeholder="説明..." v-model="editingChat().description" />
