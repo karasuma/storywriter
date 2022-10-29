@@ -12,7 +12,13 @@
             <textarea spellcheck="false" rows="4" v-model="storyData.description"></textarea>
         </div>
 
-        <div class="storyedit__timeline" v-for="item in storyData.items" :key="item.id" :id="item.id">
+        <div class="storyedit__timeline" v-for="item in storyData.items" :key="item.id" :id="item.id"
+             @dragover="itemDragOver(item.id, $event)"
+             @dragleave="itemDragLeave(item.id)"
+             @drop="itemOnDrop(item.id, $event)">
+            <p class="selectable" draggable="true" @dragstart="itemDragStart(item.id, $event)">
+                ―<br/>―<br/>―
+            </p>
             <StoryEditSectionView :item="item" @removeSelf="remove" />
         </div>
 
@@ -35,6 +41,7 @@
         margin: 8px 0;
         width: 100%;
         $Img-Width: 28px;
+
         & input {
             width: calc( 100% - #{$Img-Width} - 8px ); // 8px: approx margin
             font-size: 32px;
@@ -44,6 +51,7 @@
         }
         & img {
             @include square-size($Img-Width);
+            user-select: none;
             margin: 6px;
         }
     }
@@ -57,6 +65,16 @@
 
     &__timeline {
         width: 100%;
+        display: flex;
+        align-items: center;
+        & p {
+            font-size: 24px;
+            font-weight: bold;
+            line-height: 0.4em;
+            padding: 8px;
+            cursor: default;
+            user-select: none;
+        }
     }
 
     &__add {
@@ -67,14 +85,16 @@
         & img {
             width: 32px;
             height: auto;
+            user-select: none;
         }
     }
 }
 </style>
 
 <script lang="ts">
-import { StoryData } from '@/logics/models/story-data';
+import { StoryContent, StoryData, StoryItem } from '@/logics/models/story-data';
 import ColorMessage from '@/logics/utils/color-message';
+import DragElement from '@/logics/utils/draggable';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Vue, Options } from 'vue-class-component';
 import ColorDialog from '../dialogs/ColorDialog.vue';
@@ -124,7 +144,26 @@ import StoryEditSectionView from './StoryEditSectionView.vue';
         },
         changeColor(): void {
             this.colortrig = ColorMessage.Show(ColorMessage.Type.Light);
-        }
+        },
+        // Drag events
+        itemDragStart(id: string, event: DragEvent): void {
+            this.drag.DragStart(id, event, (event.target as HTMLElement).parentNode);
+            this.dragging = true;
+        },
+        itemDragOver(id: string, event: DragEvent): void {
+            if(!this.dragging) return;
+            this.drag.DragOver(id, event);
+        },
+        itemDragLeave(id: string): void {
+            if(!this.dragging) return;
+            this.drag.DragLeave(id);
+        },
+        itemOnDrop(id: string, event: DragEvent): void {
+            this.drag.Drop(id, event, (recvID: string, nextID: string) => {
+                this.adjustSection(recvID, nextID);
+                this.dragging = false;
+            });
+        },
     },
     emits: [
         "deleteStory"
@@ -135,5 +174,44 @@ export default class StoryEditView extends Vue {
     storyData!: StoryData;
     message = new SystemMessage();
     colortrig = new ColorMessage();
+    drag = new DragElement(document);
+    dragging = false;
+
+    public copyItem(src: StoryItem): StoryItem {
+        const item = new StoryItem(src.title);
+        item.id = src.id;
+        item.color = src.color;
+        src.stories.forEach(s => {
+            const c = new StoryContent(s.text);
+            c.id = s.id;
+            item.stories.push(c);
+        });
+        return item;
+    }
+
+    public adjustSection(currID: string, nextID: string): void {
+        if(nextID.length == 0) {
+            this.moveSection(currID);
+            return;
+        }
+        this.moveSection(currID, nextID);
+    }
+
+    public moveSection(currID: string, nextID?: string): void {
+        const item = this.storyData.items.findIndex(x => x.id == currID);
+        const target = this.storyData.items.findIndex(x => x.id == nextID);
+
+        const temp = this.copyItem(this.storyData.items[item]);
+        this.storyData.items.splice(item, 1);
+        if(nextID === undefined) {
+            this.storyData.items.push(temp);
+            return;
+        }
+        if(item > target) {
+            this.storyData.items.splice(target, 0, temp);
+        } else {
+            this.storyData.items.splice(target - 1, 0, temp);
+        }
+    }
 }
 </script>

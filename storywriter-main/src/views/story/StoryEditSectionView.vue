@@ -23,12 +23,6 @@
 
         <div class="section__add">
             <img class="selectable" src="@/assets/dark/add.png" @click="addStory()" />
-            <div class="section__add__move">
-                <img class="selectable" src="@/assets/dark/arrow.png" style="transform: rotate(90deg);"
-                @click="moveStoryItem(true)" />
-                <img class="selectable" src="@/assets/dark/arrow.png" style="transform: rotate(-90deg);"
-                @click="moveStoryItem(false)" />
-            </div>
         </div>
     </div>
 </template>

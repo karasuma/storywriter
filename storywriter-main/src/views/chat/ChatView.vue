@@ -84,6 +84,14 @@ import ChatListView from './ChatListView.vue';
             }
             return "???";
         },
+        optionColorCss(s: StoryData): string {
+            const basecss = "background-color:";
+            if(s.color.length == 0 || s.color == "transparent") {
+                return `${basecss} transparent;`;
+            }
+            const rgb = Utils.hex2rgb(s.color);
+            return `${basecss} rgba(${rgb.join(",")},0.3);`;
+        },
         // Drag events
         itemDragStart(id: string, event: DragEvent): void {
             this.drag.DragStart(id, event, (event.target as HTMLElement).parentNode);
@@ -103,14 +111,6 @@ import ChatListView from './ChatListView.vue';
                 this.dragging = false;
             });
         },
-        optionColorCss(s: StoryData): string {
-            const basecss = "background-color:";
-            if(s.color.length == 0 || s.color == "transparent") {
-                return `${basecss} transparent;`;
-            }
-            const rgb = Utils.hex2rgb(s.color);
-            return `${basecss} rgba(${rgb.join(",")},0.3);`;
-        }
     },
     computed: {
         storyNameList: function(): Array<StoryData> {
