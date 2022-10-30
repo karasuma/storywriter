@@ -82,7 +82,7 @@ import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
         },
 
         dragStart(id: string, event: DragEvent): void {
-            this.drag.DragStart(id, event);
+            this.drag.DragStart(id, event, (event.target as HTMLElement).parentNode);
         },
         dragOver(id: string, event: DragEvent): void {
             this.drag.DragOver(id, event);
@@ -92,7 +92,7 @@ import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
         },
         onDrop(id: string, event: DragEvent): void {
             this.drag.Drop(id, event, (recvID: string, nextID: string) => {
-                this.adjustStories(recvID, id, nextID);
+                this.adjustStories(recvID, nextID);
             });
         },
         refresh(story: Stories): void {
@@ -113,43 +113,38 @@ export default class StoryHierarchyView extends Vue {
 
     public moveStories(mover: Stories, insert?: Stories): void {
         if(insert === undefined) { // Insert for the last
-            // move
-            this.root.children.push(mover);
-            // remove
-            const idx = mover.parent.children.findIndex(s => s.id == mover.id);
-            mover.parent.children.splice(idx, 1);
+            const beforeParent = mover.parent;
+            const idx = beforeParent.children.findIndex(s => s.id == mover.id);
+            const flatten = this.root.GetFlattenStories();
+            const lastStory = flatten[flatten.length - 1];
             // change parent
-            const hierParent = this.root.GetFlattenStories()[this.root.GetFlattenStories().length - 1];
-            mover.parent = hierParent.isDir ? hierParent : hierParent.parent;
-        } else {
-            // shift timeline
-            this.root.GetFlattenStories()
-                .filter(s => s.content.time >= insert.content.time)
-                .forEach(s => s.content.time++);
-            // insert
-            const insertPos = insert.parent.children.findIndex(s => s.id == insert.id);
-            insert.parent.children.splice(insertPos, 0, mover);
+            mover.parent = lastStory.isDir ? lastStory : lastStory.parent;
+            // move
+            mover.parent.children.push(mover);
             // remove
+            beforeParent.children.splice(idx, 1);
+        } else {
+            // insert and remove
             const idx = mover.parent.children.findIndex(s => s.id == mover.id);
-            mover.parent.children.splice(idx, 1);
-            // change parent and timeline
+            const insertPos = insert.parent.children.findIndex(s => s.id == insert.id);
+            const rmidx = (mover.depth == insert.depth && idx > insertPos) ? idx + 1 : idx;
+            insert.parent.children.splice(insertPos, 0, mover);
+            mover.parent.children.splice(rmidx, 1);
+            // change parent
             mover.parent = insert.parent;
-            mover.content.time = insert.content.time - 1;
         }
-        // change depth
-        mover.depth = mover.parent.depth + 1;
     }
 
-    public adjustStories(movedID: string, nextSiblingID: string, nextID: string): void {
+    public adjustStories(movedID: string, nextID: string): void {
         const flatten = this.root.GetFlattenStories();
         const movedStory = flatten.find((x: Stories) => x.id == movedID);
         if(movedStory === undefined) return;
 
-        if(nextSiblingID === undefined || nextID.length == 0) {
+        if(nextID == DragElement.NoNextElement) {
             // Currently dropped element was placed to the last
             this.moveStories(movedStory);
         } else {
-            const nextStory = flatten.find((x: Stories) => x.id == nextSiblingID);
+            const nextStory = flatten.find((x: Stories) => x.id == nextID);
             if(nextStory === undefined) return;
             this.moveStories(movedStory, nextStory);
         }

@@ -69,10 +69,9 @@ export class Stories implements IUniqueObject {
     public static ResetAllTimes(root: Stories, startTime?: number): number {
         let time = startTime ?? 1;
         root.children.forEach((s: Stories) => {
+            s.content.time = time++;
             if(s.isDir) {
                 time = Stories.ResetAllTimes(s, time);
-            } else {
-                s.content.time = time++;
             }
         });
         return time;

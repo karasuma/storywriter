@@ -7,7 +7,9 @@
                     @dragleave="$emit('ondragleave', story.id)"
                     @drop="$emit('ondrop', story.id, $event)">
             <div class="title">
-                <div class="draggable"></div>
+                <div class="draggable"
+                    draggable="true"
+                    @dragstart="$emit('ondragstart', story.id, $event)"></div>
                 <div class="selected" :style="selected()"></div>
                 <div class="selected" :style="[leftMargin(), directoryBorder()]"></div>
                 <img src="@/assets/dark/caret.png" @click="toggleExpand()" :style="expandingImg()"/>
@@ -20,15 +22,15 @@
             </div>
         </div>
         <div v-else class="item editable_item"
-                    draggable="true"
-                    @dragstart="$emit('ondragstart', story.id, $event)"
                     @dragover="$emit('ondragover', story.id, $event)"
                     @dragleave="$emit('ondragleave', story.id)"
                     @drop="$emit('ondrop', story.id, $event)"
                     @click="editStory(story)"
         >
             <div class="title">
-                <div class="draggable"></div>
+                <div class="draggable"
+                    draggable="true"
+                    @dragstart="$emit('ondragstart', story.id, $event)"></div>
                 <div class="selected" :style="selected()"></div>
                 <div class="selected" :style="[leftMargin(), directoryBorder()]"></div>
                 <div class="blank"></div>
@@ -75,8 +77,12 @@ $StoryItem-Height: 18px;
                 border-left: double 6px $Border-Color;
                 opacity: 0.5;
                 user-select: contain;
+                cursor: grab;
                 &:hover {
                     opacity: 1;
+                }
+                &:active {
+                    cursor: grabbing;
                 }
             }
 
