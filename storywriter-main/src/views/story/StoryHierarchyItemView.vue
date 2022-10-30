@@ -10,8 +10,8 @@
                 <div class="draggable"
                     draggable="true"
                     @dragstart="$emit('ondragstart', story.id, $event)"></div>
-                <div class="selected" :style="selected()"></div>
-                <div class="selected" :style="[leftMargin(), directoryBorder()]"></div>
+                <!--<div class="selected" :style="[leftMargin(), directoryBorder()]"></div>-->
+                <div class="depth" v-for="d in expandLefts(story.depth)" :key="d"></div>
                 <img src="@/assets/dark/caret.png" @click="toggleExpand()" :style="expandingImg()"/>
                 <p @click="toggleExpand()" :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
@@ -31,10 +31,10 @@
                 <div class="draggable"
                     draggable="true"
                     @dragstart="$emit('ondragstart', story.id, $event)"></div>
-                <div class="selected" :style="selected()"></div>
-                <div class="selected" :style="[leftMargin(), directoryBorder()]"></div>
+                <!--<div class="selected" :style="[leftMargin(), directoryBorder()]"></div>-->
+                <div class="depth" v-for="d in expandLefts(story.depth)" :key="d"></div>
                 <div class="blank"></div>
-                <p :title="story.content.caption">{{ story.content.caption }}</p>
+                <p :style="selected()" :title="story.content.caption">{{ story.content.caption }}</p>
             </div>
             <div class="controls">
                 <div class="blank"></div>
@@ -69,10 +69,9 @@ $StoryItem-Height: 18px;
         & .title {
             max-width: calc( 100% - 60px );
             display: flex;
-            justify-content: flex-start;
 
             & .draggable {
-                width: 20px;
+                min-width: 15px;
                 margin: 2px 0;
                 border-left: double 6px $Border-Color;
                 opacity: 0.5;
@@ -94,13 +93,16 @@ $StoryItem-Height: 18px;
 
             $Caret: calc( #{$StoryItem-Height} - 3px );
             & img {
-                min-width: $Caret;
-                height: $Caret;
+                @include square-size($Caret);
+            }
+
+            & .depth {
+                margin: -1px 6px;
+                border-right: solid 1px #999;
             }
 
             & .blank {
-                min-width: $Caret;
-                height: $Caret;
+                @include square-size($Caret);
             }
 
             & p {
@@ -108,7 +110,8 @@ $StoryItem-Height: 18px;
                 margin-left: 4px;
                 padding: 2px 0;
                 text-align: left;
-                width: $Hierarchy-Width;
+                //width: $Hierarchy-Width;
+                width: 100%;
                 font-size: calc( #{$StoryItem-Height} - 4px );
                 &:hover {
                     cursor: pointer;
@@ -138,6 +141,7 @@ import InputDialog from "../dialogs/InputDialog.vue";
 import MessageDialog from "../dialogs/MessageDialog.vue";
 import SystemMessage from "@/logics/utils/SystemMessage";
 import InputMessage from "@/logics/utils/input-message";
+import { Enumerable, Utils } from "@/logics/models/utils";
 
 @Options({
     components: {
@@ -170,8 +174,9 @@ import InputMessage from "@/logics/utils/input-message";
             return `margin-left: ${this.GetDepthMargin()}px;`;
         },
         selected(): string {
-            const globalcss = "margin-right: 6px; min-width: 3px;";
-            return `${globalcss} background-color: ${this.story.isEditing ? "orange" : "transparent"};`;
+            //const globalcss = "margin-right: 6px; min-width: 3px;";
+            //return `${globalcss} background-color: ${this.story.isEditing ? "orange" : "transparent"};`;
+            return `color: ${this.story.isEditing ? "#68be8d" : "white"};`;
         },
         appendItem(result: string): void {
             if(this.rename) {
@@ -205,6 +210,9 @@ import InputMessage from "@/logics/utils/input-message";
         editStory(item: Stories): void {
             this.story.GetFlattenStories().forEach((x: Stories) => x.isEditing = false);
             item.isEditing = true;
+        },
+        expandLefts(depth: number): Array<string> {
+            return Enumerable.Range(depth - 1).map(() => Utils.getUniqueId());
         }
     },
 })
