@@ -39,7 +39,7 @@ export default class DragElement {
         el.style.borderBottom = "";
     }
 
-    public Drop(ID: string, event: DragEvent, dragged: (recvID: string, nextID: string) => void): void {
+    public Drop(ID: string, event: DragEvent, dragged: (recvID: string, nextID: string) => void, leaveElement = false): void {
         event.preventDefault();
         const recvID = event.dataTransfer?.getData("text/plain");
         if(recvID === undefined) return;
@@ -52,13 +52,17 @@ export default class DragElement {
         if((event.clientY - rect.top) < (el.clientHeight * 0.5)) {
             // Drop upside of the target
             //console.log(`upside: ${el?.className}, ${el?.id}`);
-            el.parentNode?.insertBefore(draggedEl, el);
+            if(!leaveElement) {
+                el.parentNode?.insertBefore(draggedEl, el);
+            }
             dragged(recvID, el.id);
         } else {
             // Drop downside of the target
             const nextEl = el.nextElementSibling;
             //console.log(`downside: ${nextEl?.className}, ${nextEl?.id ?? "x"}`);
-            el.parentNode?.insertBefore(draggedEl, nextEl);
+            if(!leaveElement) {
+                el.parentNode?.insertBefore(draggedEl, nextEl);
+            }
             const nextId = nextEl?.id ?? "";
             dragged(recvID, nextId.length != 0 ? nextId : DragElement.NoNextElement);
         }

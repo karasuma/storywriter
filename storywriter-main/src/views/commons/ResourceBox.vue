@@ -213,6 +213,7 @@ export default class ResourceBox extends Vue {
 
     & .drop {
         border-radius: 12px;
+        width: 100%;
         height: 100%;
         display: flex;
         flex-direction: column;
@@ -220,8 +221,6 @@ export default class ResourceBox extends Vue {
         align-items: center;
 
         &__main {
-            height: auto;
-            width: 50%;
             margin: 8px;
         }
         &__desc {

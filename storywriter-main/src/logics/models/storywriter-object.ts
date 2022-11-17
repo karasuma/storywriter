@@ -2,12 +2,14 @@ import { Actors } from "./actor-data";
 import { Chats } from "./chat-data";
 import { Dictionaries } from "./dictionary-data";
 import { Stories } from "./story-data";
+import { Worlds } from "./world-data";
 
 export class StoryWriterObject {
     public story = Stories.Create();
     public dict = Dictionaries.Create();
     public actor = Actors.Create();
     public chat = Chats.Create();
+    public world = Worlds.Create();
 }
 
 export class StoryWriterObjectSample extends StoryWriterObject {
@@ -66,7 +68,21 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         chat.AddTalk(momiji.id, "さすが、ゴシップ専門記者は言うことが違いますね。");
         chat.AddTalk(hatate.id, "な");
         chat.AddTalk(aya.id, "は？");
+    }
 
+    createWorld(): void {
+        const w1 = this.world.area.Add("妖怪の山", true);
+        const a1 = w1.Add("天狗の里");
+        a1.isEditing = true;
+        //a1.description = "天狗が住んでる街。\n広い。";
+        a1.AppendDesc("説明", "天狗が住んでる街。\n広い。");
+        w1.Add("九天の滝");
+        const w2 = this.world.area.Add("守矢神社", true);
+        w2.Add("大蝦蟇の池");
+        const a2 = w2.Add("警邏所", true);
+        a2.Add("一番詰所");
+        a2.Add("表門");
+        this.world.MakeFlattenWorlds();
     }
 
     constructor() {
@@ -75,5 +91,6 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         this.createDict();
         this.createActor();
         this.createChat();
+        this.createWorld();
     }
 }

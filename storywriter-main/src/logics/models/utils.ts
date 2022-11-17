@@ -70,6 +70,19 @@ export class Utils {
     static random(max = 1): number {
         return Math.floor(Math.random() * max);
     }
+
+    static moveAt<T>(array: Array<T>, index: number, at: number): Array<T> {
+        if(index === at || index > array.length - 1 || at > array.length - 1) {
+            return array;
+        }
+
+        const value = array[index];
+        const tail = array.slice(index + 1);
+        array.splice(index);
+        Array.prototype.push.apply(array, tail);
+        array.splice(at, 0, value);
+        return array;
+    }
 }
 
 export class Enumerable {

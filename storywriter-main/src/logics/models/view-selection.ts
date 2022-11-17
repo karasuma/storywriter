@@ -5,9 +5,10 @@ export default class ViewSelection {
         Dictionary: 3,
         Actor: 4,
         Chat: 5,
+        World: 6,
     } as const;
 
-    public currentView = 5;
+    public currentView = 6;
 
     public ChangeCurrentView(view: number): void {
         this.currentView = view;
