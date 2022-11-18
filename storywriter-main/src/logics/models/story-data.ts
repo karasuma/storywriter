@@ -180,6 +180,21 @@ export class Stories implements IUniqueObject {
             this.SwapStory(id, currDirs[currIdx + 1].id);
         }
     }
+
+    public ChangeDepth(depth: number): void {
+        if(depth <= 1) return;
+        this.depth = depth;
+        this.children.forEach(x => x.ChangeDepth(depth + 1));
+    }
+
+    public FindAncestor(id: string): Stories | null {
+        let parent = this.parent;
+        while(parent.id !== this.root.id) {
+            if(parent.id === id) return parent;
+            parent = parent.parent;
+        }
+        return null;
+    }
 }
 
 export class StoryData implements IUniqueObject {

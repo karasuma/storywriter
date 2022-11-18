@@ -14,16 +14,16 @@ export class StoryWriterObject {
 
 export class StoryWriterObjectSample extends StoryWriterObject {
     createStory(): void {
-        this.story.AppendStory("Content1");
-        const dir1 = this.story.AppendStory("Dir1", true);
-        dir1.AppendStory("Dir1-Content1");
-        dir1.AppendStory("Dir1-Content2");
-        const dir2 = dir1.AppendStory("Dir-c1", true);
-        dir2.AppendStory("Dir-c1-Content1");
-        dir2.AppendStory("Dir-c1-Content2");
-        const c2 = this.story.AppendStory("Content2");
+        this.story.AppendStory("序章");
+        const dir1 = this.story.AppendStory("第一章", true);
+        dir1.AppendStory("崩壊");
+        dir1.AppendStory("邂逅");
+        const dir2 = dir1.AppendStory("諜報", true);
+        dir2.AppendStory("信仰と友情");
+        dir2.AppendStory("洗脳と利潤");
+        const c2 = this.story.AppendStory("幕間");
         c2.isEditing = true;
-        this.story.AppendStory("Content3");
+        this.story.AppendStory("次章");
 
         c2.content.color = "#4acccc";
         c2.content.description = "サンプルの\nストーリー紹介文";

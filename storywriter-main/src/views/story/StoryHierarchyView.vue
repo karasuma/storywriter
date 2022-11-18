@@ -30,6 +30,10 @@
         width: calc( 100% - 6px );
     }
 
+    & .hierarchy-items {
+        height: 1.5em;
+    }
+
     & .hierarchy-ctrl {
         margin: 8px 0;
         display: flex;
@@ -48,8 +52,10 @@
 
 <script lang="ts">
 import { Stories } from '@/logics/models/story-data';
+import { Utils } from '@/logics/models/utils';
 import DragElement from '@/logics/utils/draggable';
 import InputMessage from '@/logics/utils/input-message';
+import Notifier from '@/logics/utils/notifier';
 import { Options, Vue } from 'vue-class-component';
 import InputDialog from '../dialogs/InputDialog.vue';
 import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
@@ -93,7 +99,7 @@ import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
         onDrop(id: string, event: DragEvent): void {
             this.drag.Drop(id, event, (recvID: string, nextID: string) => {
                 this.adjustStories(recvID, nextID);
-            });
+            }, true);
         },
         refresh(story: Stories): void {
             story.isExpanding = !story.isExpanding;
@@ -110,45 +116,41 @@ export default class StoryHierarchyView extends Vue {
     public packStories(): void {
         this.root.InitializeHierarchy();
     }
-
-    public moveStories(mover: Stories, insert?: Stories): void {
-        if(insert === undefined) { // Insert for the last
-            const beforeParent = mover.parent;
-            const idx = beforeParent.children.findIndex(s => s.id == mover.id);
-            const flatten = this.root.GetFlattenStories();
-            const lastStory = flatten[flatten.length - 1];
-            // change parent
-            mover.parent = lastStory.isDir ? lastStory : lastStory.parent;
-            // move
-            mover.parent.children.push(mover);
-            // remove
-            beforeParent.children.splice(idx, 1);
-        } else {
-            // insert and remove
-            const idx = mover.parent.children.findIndex(s => s.id == mover.id);
-            const insertPos = insert.parent.children.findIndex(s => s.id == insert.id);
-            const rmidx = (mover.depth == insert.depth && idx > insertPos) ? idx + 1 : idx;
-            insert.parent.children.splice(insertPos, 0, mover);
-            mover.parent.children.splice(rmidx, 1);
-            // change parent
-            mover.parent = insert.parent;
-        }
-    }
-
+    
     public adjustStories(movedID: string, nextID: string): void {
         const flatten = this.root.GetFlattenStories();
-        const movedStory = flatten.find((x: Stories) => x.id == movedID);
-        if(movedStory === undefined) return;
+        const moved = flatten.find(x => x.id === movedID);
+        if(moved === undefined) return;
+        const movedIdx = moved.parent.children.findIndex(x => x.id === movedID);
 
-        if(nextID == DragElement.NoNextElement) {
-            // Currently dropped element was placed to the last
-            this.moveStories(movedStory);
-        } else {
-            const nextStory = flatten.find((x: Stories) => x.id == nextID);
-            if(nextStory === undefined) return;
-            this.moveStories(movedStory, nextStory);
+        if(nextID === DragElement.NoNextElement) {
+            this.root.children.push(moved);
+            moved.parent.children.splice(movedIdx, 1);
+            moved.ChangeDepth(this.root.depth + 1);
+            moved.parent = this.root;
+            this.root.InitializeHierarchy();
+            return;
         }
-        this.packStories();
+
+        const next = flatten.find(x => x.id === nextID);
+        if(next === undefined) return;
+        const nextIdx = next.parent.children.findIndex(x => x.id === nextID);
+        if(moved.parent.id !== next.parent.id) {
+            if(next.FindAncestor(moved.id) !== null && moved.isDir) {
+                Notifier.Send(
+                    "ストーリーの親子関係は入れ替えられません。",
+                    Notifier.Levels.Warning
+                );
+                return;
+            }
+            next.parent.children.splice(nextIdx, 0, moved);
+            moved.parent.children.splice(movedIdx, 1);
+            moved.ChangeDepth(next.depth);
+            moved.parent = next.parent;
+        } else {
+            Utils.moveAt(moved.parent.children, movedIdx, nextIdx > movedIdx ? nextIdx - 1 : nextIdx);
+        }
+        this.root.InitializeHierarchy();
     }
 }
 </script>

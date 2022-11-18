@@ -1,11 +1,11 @@
 <template>
     <InputDialog :result="appendItem" :inputMessage="inputdlg" />
-    <MessageDialog :result="deleteItem" :message="messagedlg" />
     <div class="StoryItem" :style="itemBorder()">
-        <div v-if="story.isDir" class="item"
+        <div v-if="story.isDir" class="item directory editable_item"
                     @dragover="$emit('ondragover', story.id, $event)"
                     @dragleave="$emit('ondragleave', story.id)"
-                    @drop="$emit('ondrop', story.id, $event)">
+                    @drop="$emit('ondrop', story.id, $event)"
+        >
             <div class="title">
                 <div class="draggable"
                     draggable="true"
@@ -13,19 +13,19 @@
                 <!--<div class="selected" :style="[leftMargin(), directoryBorder()]"></div>-->
                 <div class="depth" v-for="d in expandLefts(story.depth)" :key="d"></div>
                 <img src="@/assets/dark/caret.png" @click="toggleExpand()" :style="expandingImg()"/>
-                <p @click="toggleExpand()" :title="story.content.caption">{{ story.content.caption }}</p>
+                <p :style="selected()" :title="story.content.caption" @click="editStory(story)">
+                    {{ story.content.caption }}
+                </p>
             </div>
             <div class="controls">
-                <img title="編集" src="@/assets/dark/edit.png" @click="createDialog(true)" class="selectable" />
-                <img title="追加" src="@/assets/dark/add.png" @click="createDialog(false)" class="selectable" />
-                <img title="削除" src="@/assets/dark/dispose.png" @click="deleteDialog()" class="selectable" />
+                <img title="お話の追加" src="@/assets/dark/edit.png" @click="createDialog(false)" class="selectable" />
+                <img v-show="isLessThanDepth(story.depth)" title="章の追加" src="@/assets/dark/folder.png" @click="createDialog(true)" class="selectable" />
             </div>
         </div>
         <div v-else class="item editable_item"
                     @dragover="$emit('ondragover', story.id, $event)"
                     @dragleave="$emit('ondragleave', story.id)"
                     @drop="$emit('ondrop', story.id, $event)"
-                    @click="editStory(story)"
         >
             <div class="title">
                 <div class="draggable"
@@ -34,7 +34,9 @@
                 <!--<div class="selected" :style="[leftMargin(), directoryBorder()]"></div>-->
                 <div class="depth" v-for="d in expandLefts(story.depth)" :key="d"></div>
                 <div class="blank"></div>
-                <p :style="selected()" :title="story.content.caption">{{ story.content.caption }}</p>
+                <p :style="selected()" :title="story.content.caption" @click="editStory(story)">
+                    {{ story.content.caption }}
+                </p>
             </div>
             <div class="controls">
                 <div class="blank"></div>
@@ -51,7 +53,7 @@ $StoryItem-Height: 18px;
     margin-left: 3px;
     width: calc( 100% - 6px );
     padding: 2px 0;
-    height: $StoryItem-Height;
+    font-size: $StoryItem-Height;
 
     & .editable_item:hover {
         background-color: $Hover-Color;
@@ -64,15 +66,22 @@ $StoryItem-Height: 18px;
     & .item {
         display: flex;
         justify-content: space-between;
+        align-items: center;
         width: 100%;
 
         & .title {
             max-width: calc( 100% - 60px );
+            height: 1.5em;
             display: flex;
+            align-items: center;
+
+            & > img {
+                cursor: pointer;
+            }
 
             & .draggable {
                 min-width: 15px;
-                margin: 2px 0;
+                height: 1.3em;
                 border-left: double 6px $Border-Color;
                 opacity: 0.5;
                 user-select: contain;
@@ -86,35 +95,29 @@ $StoryItem-Height: 18px;
             }
 
             & .selected {
-                margin-top: -2px;
                 margin-right: 2px;
                 height: calc( #{$StoryItem-Height} + 4px );
             }
 
-            $Caret: calc( #{$StoryItem-Height} - 3px );
-            & img {
-                @include square-size($Caret);
-            }
-
             & .depth {
-                margin: -1px 6px;
+                margin: 0 9px;
                 border-right: solid 1px #999;
+                height: 100%;
             }
 
             & .blank {
-                @include square-size($Caret);
+                @include square-size(calc( #{$StoryItem-Height} - 3px ));
             }
 
             & p {
                 @include hide-overflow-text;
                 margin-left: 4px;
-                padding: 2px 0;
                 text-align: left;
                 //width: $Hierarchy-Width;
                 width: 100%;
-                font-size: calc( #{$StoryItem-Height} - 4px );
                 &:hover {
                     cursor: pointer;
+                    opacity: 0.6;
                 }
             }
         }
@@ -122,11 +125,25 @@ $StoryItem-Height: 18px;
         & .controls {
             display: flex;
             & * {
-                height: calc( #{$StoryItem-Height} - 1px );
+                height: $StoryItem-Height;
                 margin: 0 2px;
                 &:hover {
                     cursor: pointer;
                 }
+            }
+        }
+    }
+
+    & .directory {
+        & > .title {
+            & > img {
+                @include square-size(1.3em);
+                margin-right: 3px;
+                margin-top: 3px;
+            }
+            
+            & > p {
+                font-size: 1.3em;
             }
         }
     }
@@ -138,15 +155,12 @@ $StoryItem-Height: 18px;
 import { Options, Vue } from "vue-class-component";
 import { Stories } from "@/logics/models/story-data";
 import InputDialog from "../dialogs/InputDialog.vue";
-import MessageDialog from "../dialogs/MessageDialog.vue";
-import SystemMessage from "@/logics/utils/SystemMessage";
 import InputMessage from "@/logics/utils/input-message";
 import { Enumerable, Utils } from "@/logics/models/utils";
 
 @Options({
     components: {
         InputDialog,
-        MessageDialog
     },
     props: {
         story: {
@@ -179,27 +193,11 @@ import { Enumerable, Utils } from "@/logics/models/utils";
             return `color: ${this.story.isEditing ? "#68be8d" : "white"};`;
         },
         appendItem(result: string): void {
-            if(this.rename) {
-                this.story.content.caption = result;
-                return;
-            }
             this.story.AppendStory(result, this.isDir);
         },
-        deleteItem(result: number): void {
-            if(result == SystemMessage.MessageResult.OK) {
-                Stories.RemoveStoryFromID(this.story.root, this.story.id);
-            }
-        },
-        createDialog(rename: boolean): void {
-            this.rename = rename;
-            this.inputdlg = InputMessage.Create(
-                rename ? "グループ名の編集" : "サブアイテムの追加",
-                rename ? this.story.content.caption : "");
-        },
-        deleteDialog(): void {
-            const title = `${this.story.content.caption} の削除`;
-            const msg = `${this.story.content.caption} を削除しますか？`;
-            this.messagedlg = SystemMessage.Create(title, msg, SystemMessage.MessageType.Normal, true);
+        createDialog(isDir: boolean): void {
+            this.isDir = isDir;
+            this.inputdlg = InputMessage.Create(`${isDir ? "章" : "お話"}の追加`);
         },
         toggleExpand(): void {
             this.$emit('refreshItems', this.story);
@@ -213,15 +211,19 @@ import { Enumerable, Utils } from "@/logics/models/utils";
         },
         expandLefts(depth: number): Array<string> {
             return Enumerable.Range(depth - 1).map(() => Utils.getUniqueId());
+        },
+        isLessThanDepth(depth: number): boolean {
+            return depth < this.maxDepth;
         }
     },
 })
 
 export default class StoryHierarchyItemView extends Vue {
     story!: Stories;
-    messagedlg = new SystemMessage();
     inputdlg = new InputMessage();
-    rename = false;
+    isDir = false;
+
+    maxDepth = 2;
 
     public GetDepthMargin(): number {
         return (this.story.depth - 1) * 10; // depth * margin
