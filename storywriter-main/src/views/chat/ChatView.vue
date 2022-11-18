@@ -188,7 +188,7 @@ export default class ChatView extends Vue {
                      @dragleave="itemDragLeave(c.id)"
                      @drop="itemOnDrop(c.id, $event)"
                 >
-                    <p class="mainchat__chats__item-draggable selectable"
+                    <p class="mainchat__chats__item-draggable"
                         draggable="true"
                         @dragstart="itemDragStart(c.id, $event)"
                     >―<br/>―<br/>―</p>
@@ -409,6 +409,14 @@ export default class ChatView extends Vue {
                     font-size: 21px;
                     font-weight: bold;
                     line-height: 0.4em;
+                    cursor: grab;
+                    opacity: 0.6;
+                    &:hover {
+                        opacity: 1;
+                    }
+                    &:active {
+                        cursor: grabbing;
+                    }
                 }
             }
             &__add {
