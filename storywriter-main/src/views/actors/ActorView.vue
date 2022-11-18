@@ -3,6 +3,8 @@ import { ActorData, ActorDetail } from '@/logics/models/actor-data';
 import { Defs } from '@/logics/models/defs';
 import { ItemResource } from '@/logics/models/resource';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
+import { Utils } from '@/logics/models/utils';
+import DragElement from '@/logics/utils/draggable';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Options, Vue } from 'vue-class-component';
 import ResourceBox from '../commons/ResourceBox.vue';
@@ -86,7 +88,26 @@ import ActorListView from './ActorListView.vue';
         },
         removeDetail(d: ActorDetail): void {
             this.editingActor().RemoveDetail(d.id);
-        }
+        },
+        // Drag events
+        itemDragStart(id: string, event: DragEvent): void {
+            this.drag.DragStart(id, event, (event.target as HTMLElement).parentNode?.parentNode);
+            this.dragging = true;
+        },
+        itemDragOver(id: string, event: DragEvent): void {
+            if(!this.dragging) return;
+            this.drag.DragOver(id, event);
+        },
+        itemDragLeave(id: string): void {
+            if(!this.dragging) return;
+            this.drag.DragLeave(id);
+        },
+        itemOnDrop(id: string, event: DragEvent): void {
+            this.drag.Drop(id, event, (recvID: string, nextID: string) => {
+                this.AdjustDescription(recvID, nextID);
+                this.dragging = false;
+            });
+        },
     }
 })
 
@@ -95,6 +116,20 @@ export default class ActorView extends Vue {
 
     blankImage = new ItemResource();
     systemMessage = new SystemMessage();
+    drag = new DragElement(document);
+    dragging = false;
+    
+    public AdjustDescription(moveeID: string, nextID: string): void {
+        const editing = this.vm.actor.actors.find((x: ActorData) => x.isEditing);
+        if(editing === undefined) return;
+        const moveeIdx = editing.details.findIndex(x => x.id == moveeID);
+        if(nextID === DragElement.NoNextElement) {
+            Utils.moveAt(editing.details, moveeIdx, editing.details.length - 1);
+            return;
+        }
+        const nextIdx = editing.details.findIndex(x => x.id === nextID);
+        Utils.moveAt(editing.details, moveeIdx, nextIdx > moveeIdx ? nextIdx - 1 : nextIdx);
+    }
 }
 </script>
 
@@ -138,15 +173,17 @@ export default class ActorView extends Vue {
                               class="actorView__detail__details-desc">
                     </textarea>
                     <div class="actorView__detail__details-item"
-                         v-for="d in editingActor().details" :id="d.id" :key="d.id">
+                         v-for="d in editingActor().details" :id="d.id" :key="d.id"
+                         @dragover="itemDragOver(d.id, $event)"
+                         @dragleave="itemDragLeave(d.id)"
+                         @drop="itemOnDrop(d.id, $event)">
                         <div class="actorView__detail__details-item-dispose">
                             <img class="selectable" src="@/assets/dark/dispose.png" @click="removeDetail(d)" />
                         </div>
                          <div class="actorView__detail__details-item-arrow">
-                            <img src="@/assets/dark/arrow.png" class="selectable" style="transform: rotate(90deg);"
-                                 :style="isTopDetailCss(d)" @click="upDetailClicked(d)" />
-                            <img src="@/assets/dark/arrow.png" class="selectable" style="transform: rotate(-90deg);"
-                                 :style="isBottomDetailCss(d)" @click="downDetailClicked(d)" />
+                            <p draggable="true" @dragstart="itemDragStart(d.id, $event)">
+                                ―<br/>―<br/>―
+                            </p>
                          </div>
                          <div class="actorView__detail__details-item-view">
                             <ActorDetailView :detail="d" />
@@ -269,12 +306,10 @@ export default class ActorView extends Vue {
                 }
 
                 &-item {
-                    margin: 10px 0;
+                    padding: 10px 0;
                     display: flex;
                     justify-content: center;
                     align-items: center;
-                    border-radius: 12px;
-                    border: solid 1px $Dim-Border-Color;
                     position: relative;
 
                     &-dispose {
@@ -294,13 +329,25 @@ export default class ActorView extends Vue {
                         justify-content: center;
                         align-items: center;
                         width: 16px;
-                        & * {
-                            @include square-size(24px);
-                            margin: 4px 0;
+                        & > p {
+                            font-size: 24px;
+                            font-weight: bold;
+                            line-height: 0.4em;
+                            padding: 8px;
+                            user-select: none;
+                            cursor: grab;
+                            opacity: 0.6;
+                            &:hover {
+                                opacity: 1;
+                            }
+                            &:active {
+                                cursor: grabbing;
+                                opacity: 1;
+                            }
                         }
                     }
                     &-view {
-                        width: calc(100% - 70px);
+                        width: 100%;
                     }
                 }
 

@@ -27,11 +27,16 @@ export default class ActorDetailView extends Vue {
 @import '@/views/css/base-design.scss';
 
 .actorDetail {
+    border: solid 1px $Dim-Border-Color;
+    border-radius: 8px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     & * {
-        margin: 8px 0;
-    }
-    & input {
-        width: 100%;
+        margin: 4px 8px;
+        width: 90%;
     }
 }
 </style>
