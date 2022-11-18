@@ -147,7 +147,7 @@ export default class WorldView extends Vue {
                          @dragover="itemDragOver(d.id, $event)"
                          @dragleave="itemDragLeave(d.id)"
                          @drop="itemOnDrop(d.id, $event)">
-                        <p class="selectable" draggable="true" @dragstart="itemDragStart(d.id, $event)">
+                        <p draggable="true" @dragstart="itemDragStart(d.id, $event)">
                             ―<br/>―<br/>―
                         </p>
                         <WorldDetailView :detail="d" />
@@ -275,7 +275,14 @@ export default class WorldView extends Vue {
                         line-height: 0.4em;
                         width: 31px;
                         margin-right: 7px;
-                        cursor: pointer;
+                        cursor: grab;
+                        opacity: 0.6;
+                        &:hover {
+                            opacity: 1;
+                        }
+                        &:active {
+                            cursor: grabbing;
+                        }
                     }
                 }
                 &-add {

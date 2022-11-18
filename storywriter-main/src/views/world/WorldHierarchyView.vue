@@ -185,6 +185,10 @@ export default class WorldHierarchyView extends Vue {
             align-items: center;
             & > p {
                 font-size: 1.3em;
+                cursor: grab;
+                &:active {
+                    cursor: grabbing;
+                }
             }
         }
 
@@ -198,7 +202,6 @@ export default class WorldHierarchyView extends Vue {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 3px 0;
             width: 100%;
             &__left {
                 display: flex;

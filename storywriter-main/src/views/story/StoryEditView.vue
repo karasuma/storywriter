@@ -16,7 +16,7 @@
              @dragover="itemDragOver(item.id, $event)"
              @dragleave="itemDragLeave(item.id)"
              @drop="itemOnDrop(item.id, $event)">
-            <p class="selectable" draggable="true" @dragstart="itemDragStart(item.id, $event)">
+            <p draggable="true" @dragstart="itemDragStart(item.id, $event)">
                 ―<br/>―<br/>―
             </p>
             <StoryEditSectionView :item="item" @removeSelf="remove" />
@@ -67,13 +67,21 @@
         width: 100%;
         display: flex;
         align-items: center;
-        & p {
+        & > p {
             font-size: 24px;
             font-weight: bold;
             line-height: 0.4em;
             padding: 8px;
-            cursor: default;
             user-select: none;
+            cursor: grab;
+            opacity: 0.6;
+            &:hover {
+                opacity: 1;
+            }
+            &:active {
+                cursor: grabbing;
+                opacity: 1;
+            }
         }
     }
 
