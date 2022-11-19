@@ -12,8 +12,8 @@
         </div>
 
         <div class="hierarchy-ctrl">
-            <img class="selectable" @click="makeStory" title="ストーリーの追加" src="@/assets/dark/edit.png" />
-            <img class="selectable" @click="makeDirectory" title="ディレクトリの追加" src="@/assets/dark/folder.png" />
+            <img class="selectable" @click="makeStory" title="お話の追加" src="@/assets/dark/edit.png" />
+            <img class="selectable" @click="makeDirectory" title="章の追加" src="@/assets/dark/folder.png" />
         </div>
     </div>
 </template>

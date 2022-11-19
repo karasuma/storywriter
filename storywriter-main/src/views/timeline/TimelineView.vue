@@ -21,6 +21,7 @@
                          @click="itemClicked(item.story)"
                          class="stories__main__inner-item"
                          :style="[itemColor(item.story.content.color), itemPosition(item)]">
+                        <img :style="item.story.isDir ? '' : 'opacity: 0'" src="@/assets/dark/folder.png" />
                         <p>{{ item.story.content.caption }}</p>
                     </div>
                 </div>
@@ -109,8 +110,14 @@
                     height: 2em;
                     margin-left: 10px;
                     background-color: $Content-BaseColor;
+                    display: flex;
+                    align-items: center;
                     cursor: pointer;
-                    & p {
+                    & > img {
+                        @include square-size(1.5em);
+                        margin: 0 4px;
+                    }
+                    & > p {
                         line-height: 2em;
                         font-size: 14px;
                         margin-left: 6px;
@@ -195,7 +202,7 @@ import ColorPalette from '../commons/ColorPalette.vue';
         stories(): Array<IdxStoryPair> {
             const items = new Array<IdxStoryPair>();
             let index = 0;
-            this.vm.story.GetFlattenStories().filter((x: Stories) => !x.isDir)
+            this.vm.story.GetFlattenStories()
                 .filter((x: Stories) => this.isVisible(x.content))
                 .forEach((s: Stories) => {
                     items.push({idx: index, story: s});
