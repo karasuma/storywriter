@@ -6,7 +6,7 @@
         <img @click="changeView(4)" :style="borderCss(4)" class="selectable" src="@/assets/dark/person.png" />
         <img @click="changeView(5)" :style="borderCss(5)" class="selectable" src="@/assets/dark/chat.png" />
         <img @click="changeView(6)" :style="borderCss(6)" class="selectable" src="@/assets/dark/world.png" />
-        <img class="selectable" src="@/assets/dark/memo.png" />
+        <img @click="changeView(7)" :style="borderCss(7)" class="selectable" src="@/assets/dark/memo.png" />
     </div>
 </template>
 

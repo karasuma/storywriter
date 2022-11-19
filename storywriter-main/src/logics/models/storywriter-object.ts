@@ -1,6 +1,8 @@
 import { Actors } from "./actor-data";
 import { Chats } from "./chat-data";
+import { Defs } from "./defs";
 import { Dictionaries } from "./dictionary-data";
+import { Memos } from "./memo-data";
 import { Stories } from "./story-data";
 import { Worlds } from "./world-data";
 
@@ -10,6 +12,7 @@ export class StoryWriterObject {
     public actor = Actors.Create();
     public chat = Chats.Create();
     public world = Worlds.Create();
+    public memo = Memos.Create();
 }
 
 export class StoryWriterObjectSample extends StoryWriterObject {
@@ -85,6 +88,13 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         this.world.MakeFlattenWorlds();
     }
 
+    createMemo(): void {
+        this.memo.Add("メモ１", "１番目のメモ");
+        const m2 = this.memo.Add("メモ２", "緑のメモ");
+        m2.color = Defs.definedDarkColors[5];
+
+    }
+
     constructor() {
         super();
         this.createStory();
@@ -92,5 +102,6 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         this.createActor();
         this.createChat();
         this.createWorld();
+        this.createMemo();
     }
 }
