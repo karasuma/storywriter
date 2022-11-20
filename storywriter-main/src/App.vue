@@ -9,10 +9,13 @@
   <!-- Main contents -->
   <div class="mainwrapper">
     <div class="header">
-      <ControlView title="Storywriter - Create your awesome stories" />
+      <ControlView :setting="vm.setting" />
     </div>
 
-    <div class="contents">
+    <div class="contents" v-if="vm.setting.Visible">
+      <SettingView :setting="vm.setting" />
+    </div>
+    <div class="contents" v-else>
       <div class="menu">
         <MenuView :selection="viewState" />
       </div>
@@ -107,6 +110,7 @@ import ActorView from './views/actors/ActorView.vue';
 import ChatView from './views/chat/ChatView.vue';
 import WorldView from './views/world/WorldView.vue';
 import MemoView from './views/memo/MemoView.vue';
+import SettingView from './views/SettingView.vue';
 
 @Options({
   components: {
@@ -121,7 +125,8 @@ import MemoView from './views/memo/MemoView.vue';
     ActorView,
     ChatView,
     WorldView,
-    MemoView
+    MemoView,
+    SettingView
   },
   methods: {
     showMe(view: number): boolean {

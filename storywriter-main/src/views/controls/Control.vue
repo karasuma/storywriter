@@ -2,12 +2,13 @@
     <MessageDialog :result="messageBoxResult" :message="message" />
     <div class="control">
         <div class="action">
-            <img src="../../assets/dark/config.png" class="selectable" />
-            <img src="../../assets/dark/save.png" class="selectable" />
-            <img src="../../assets/dark/home.png" class="selectable" />
+            <img src="../../assets/dark/config.png" title="設定" class="selectable"
+                 :style="settingButtonCss" @click="toggleConfig" />
+            <img src="../../assets/dark/save.png" title="保存" class="selectable" />
+            <img src="../../assets/dark/home.png" title="ホームへ戻る" class="selectable" />
         </div>
 
-        <div class="title" :title="title"><p>{{ title }}</p></div>
+        <div class="title" :title="title"><p>{{ title() }}</p></div>
 
         <div class="window">
             <div class="selectable window__minimum" @click="minimize">－</div>
@@ -90,14 +91,15 @@ import { Options, Vue } from 'vue-class-component';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import MessageDialog from '@/views/dialogs/MessageDialog.vue';
 import { IpcUtils } from '@/logics/utils/ipc-utils';
+import { Setting } from '@/logics/models/setting';
 
 @Options({
     components: {
         MessageDialog
     },
     props: {
-        title: {
-            type: String,
+        setting: {
+            type: Setting,
             required: true
         }
     },
@@ -116,12 +118,23 @@ import { IpcUtils } from '@/logics/utils/ipc-utils';
             if(result != SystemMessage.MessageResult.Cancel) {
                 IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
             }
+        },
+        title(): string {
+            return this.setting.GetTitle();
+        },
+        toggleConfig(): void {
+            this.setting.Visible = !this.setting.Visible;
+        }
+    },
+    computed: {
+        settingButtonCss: function(): string {
+            return this.setting.Visible ? "opacity: 1;" : "";
         }
     }
 })
 
 export default class ControlView extends Vue {
-    title = "x";
+    setting!: Setting;
     message = new SystemMessage();
 }
 </script>

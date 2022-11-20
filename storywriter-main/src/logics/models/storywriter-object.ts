@@ -3,6 +3,7 @@ import { Chats } from "./chat-data";
 import { Defs } from "./defs";
 import { Dictionaries } from "./dictionary-data";
 import { Memos } from "./memo-data";
+import { Setting } from "./setting";
 import { Stories } from "./story-data";
 import { Worlds } from "./world-data";
 
@@ -13,6 +14,8 @@ export class StoryWriterObject {
     public chat = Chats.Create();
     public world = Worlds.Create();
     public memo = Memos.Create();
+
+    public setting = new Setting();
 }
 
 export class StoryWriterObjectSample extends StoryWriterObject {
