@@ -8,11 +8,22 @@ import { Vue, Options } from 'vue-class-component';
             type: Setting,
             required: true
         }
+    },
+    watch: {
+        maxExpandrate: function(curr): void {
+            this.setting.ImageMaxExpandRate.current = Number(curr);
+        },
+        expandRate: function(curr): void {
+            this.setting.ImageExpandRate.current = Number(curr);
+        }
     }
 })
 
 export default class SettingView extends Vue {
     setting!: Setting;
+
+    maxExpandrate = this.setting.ImageMaxExpandRate.current;
+    expandRate = this.setting.ImageExpandRate.current;
 }
 </script>
 
@@ -27,7 +38,7 @@ export default class SettingView extends Vue {
             <input type="checkbox" disabled="true" v-model="setting.Darkmode" />
             <div class="controls__horizontal">
                 <input type="range"
-                        v-model="setting.ImageMaxExpandRate.current"
+                        v-model="maxExpandrate"
                         :min="setting.ImageMaxExpandRate.min"
                         :max="setting.ImageMaxExpandRate.max"
                 />
@@ -35,7 +46,7 @@ export default class SettingView extends Vue {
             </div>
             <div class="controls__horizontal">
                 <input type="range"
-                        v-model="setting.ImageExpandRate.current"
+                        v-model="expandRate"
                         :min="setting.ImageExpandRate.min"
                         :max="setting.ImageExpandRate.max"
                 />
@@ -84,6 +95,9 @@ export default class SettingView extends Vue {
         display: flex;
         flex-direction: column;
         width: 100%;
+        & * {
+            cursor: pointer;
+        }
         &__horizontal {
             display: flex;
             align-items: center;

@@ -15,7 +15,7 @@ export class Setting {
 export class MinMaxPair {
     public min = 0;
     public max = 1;
-    public current = 0.5;
+    public current = 0;
 
     constructor(value1 = 0, value2 = 1, current?: number) {
         if(value1 < value2) {

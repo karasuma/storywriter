@@ -9,7 +9,7 @@ import { Options, Vue } from "vue-class-component";
             type: ResourceViewer,
             required: true,
         },
-        expandRatio: {
+        expandRate: {
             type: Number,
             default: 5
         },
@@ -24,7 +24,7 @@ import { Options, Vue } from "vue-class-component";
         },
         resize: function(event: WheelEvent) {
             const delta = event.deltaY * this.expandPower * this.resizeRatio;
-            const next = Utils.clamp(this.currentSize - delta, 1, this.expandRatio);
+            const next = Utils.clamp(this.currentSize - delta, 1, this.expandRate);
             this.currentSize = next;
 
             this.resizing = true;
@@ -72,7 +72,7 @@ import { Options, Vue } from "vue-class-component";
 
 export default class ImageViewer extends Vue {
     resource!: ResourceViewer;
-    expandRatio!: number;
+    expandRate!: number;
     expandPower!: number;
 
     currentSize = 1;

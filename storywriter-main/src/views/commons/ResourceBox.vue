@@ -9,6 +9,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import ResourceViewer from '@/logics/utils/resource-viewer';
 import ImageViewer from './ImageViewer.vue';
+import { Setting } from '@/logics/models/setting';
 
 @Options({
     components: {
@@ -32,6 +33,11 @@ import ImageViewer from './ImageViewer.vue';
         removeResource: {
             type: Function as PropType<IReceiveString>,
             required: true
+        },
+        setting: {
+            type: Setting,
+            required: false,
+            default: new Setting()
         }
     },
     methods: {
@@ -101,6 +107,7 @@ export default class ResourceBox extends Vue {
     boxSize!: string;
     appendResource!: IReceiveString;
     removeResource!: IReceiveString;
+    setting!: Setting;
 
     isHovering = false;
     changeSelf = false;
@@ -137,7 +144,10 @@ export default class ResourceBox extends Vue {
 </script>
 
 <template>
-    <ImageViewer :resource="resourceView" />
+    <ImageViewer :resource="resourceView"
+                 :expandPower="setting.ImageExpandRate.current"
+                 :expandRate="setting.ImageMaxExpandRate.current"
+    />
     <MessageDialog :message="message" :result="msgResult" />
     <div id="ResourceBox" :style="boxSizeCss">
         <input
