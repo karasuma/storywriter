@@ -126,7 +126,9 @@ export default class WorldView extends Vue {
                    type="text" spellcheck="false" placeholder="土地名..." />
             <div class="edit__image">
                 <ResourceBox :resource="editingWorld().image" :boxSize="'100%'"
-                             :appendResource="appendCaption" :removeResource="removeCaption" />
+                             :appendResource="appendCaption" :removeResource="removeCaption"
+                             :setting="vm.setting"
+                />
             </div>
             <hr />
             <div class="edit__details">
@@ -134,11 +136,15 @@ export default class WorldView extends Vue {
                     <div class="edit__details__images-item" style="width: 80px; height: 80px;"
                          v-for="img in editingWorld().resources" :id="img.id" :key="img.id">
                         <ResourceBox :resource="img" :boxSize="'80px'"
-                                     :appendResource="appendImage" :removeResource="removeImage" />
+                                     :appendResource="appendImage" :removeResource="removeImage"
+                                     :setting="vm.setting"
+                        />
                     </div>
                     <div class="edit__details__images-item" style="width: 80px; height: 80px;">
                         <ResourceBox :resource="blankImage" :boxSize="'80px'"
-                                     :appendResource="appendImage" :removeResource="removeImage" />
+                                     :appendResource="appendImage" :removeResource="removeImage"
+                                     :setting="vm.setting"
+                        />
                     </div>
                 </div>
                 <div class="edit__details__descriptions">

@@ -147,6 +147,7 @@ export default class ActorView extends Vue {
                 <div style="width: 160px; height: 160px;">
                     <ResourceBox :resource="editingActor().face" :boxSize="'160px'"
                                  :appendResource="appendFace" :removeResource="removeFace"
+                                 :setting="vm.setting"
                     />
                 </div>
                 <input type="text" spellcheck="false" placeholder="..." v-model="editingActor().name" />
@@ -159,11 +160,15 @@ export default class ActorView extends Vue {
                     <div class="actorView__detail__images-item" style="width: 80px; height: 80px;"
                          v-for="img in editingActor().images" :id="img.id" :key="img.id">
                         <ResourceBox :resource="img" :boxSize="'80px'"
-                                     :appendResource="appendImage" :removeResource="removeImage" />
+                                     :appendResource="appendImage" :removeResource="removeImage"
+                                     :setting="vm.setting"
+                        />
                     </div>
                     <div class="actorView__detail__images-item" style="width: 80px; height: 80px;">
                         <ResourceBox :resource="blankImage" :boxSize="'80px'"
-                                     :appendResource="appendImage" :removeResource="removeImage" />
+                                     :appendResource="appendImage" :removeResource="removeImage"
+                                     :setting="vm.setting"
+                        />
                     </div>
                 </div>
                 

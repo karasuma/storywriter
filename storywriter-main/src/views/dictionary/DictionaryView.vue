@@ -79,13 +79,15 @@ export default class DictionaryView extends Vue {
                          v-for="res in editingDict().resources" :key="res.id" :id="res.id"
                     >
                         <ResourceBox :resource="res" :boxSize="'80px'"
-                                     :removeResource="removeResource" :appendResource="addResource" />
+                                     :removeResource="removeResource" :appendResource="addResource"
+                                     :setting="vm.setting" />
                     </div>
                     <div class="page__inner__resources-item">
                         <ResourceBox :resource="defaultResource"
                                      :boxSize="'80px'"
                                      :removeResource="removeResource"
-                                     :appendResource="addResource" />
+                                     :appendResource="addResource"
+                                     :setting="vm.setting" />
                     </div>
                 </div>
             </div>
