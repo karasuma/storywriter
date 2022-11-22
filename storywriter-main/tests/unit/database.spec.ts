@@ -1,4 +1,5 @@
 import { SQLite } from "@/logics/models/file_controller/database";
+import fs from "fs";
 
 describe("database.ts", () => {
     it("can make bible database", () => {
@@ -62,5 +63,21 @@ describe("database.ts", () => {
         expect(err1 === null).toEqual(false);
         expect(err2 === null).toEqual(false);
         expect(err3 === null).toEqual(false);
+    });
+
+    it("can make new database", () => {
+        // Arrange
+        const sql = "create table bible(title text, number integer)";
+        const filepath = "C:\\Temp\\database.test.db";
+
+        // Act
+        SQLite.Procedure(s => {
+            s.Execute(sql);
+        }, filepath);
+
+        // Assert
+        const fileExists = fs.existsSync(filepath);
+        expect(fileExists).toEqual(true);
+        if(fileExists) fs.rmSync(filepath);
     });
 });
