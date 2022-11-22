@@ -47,22 +47,18 @@ describe("database.ts", () => {
         const err_sql1 = "INSERT INTO bible VALUES (?, ?)";
         const err_sql2 = "SELECT col1 as unknown from bible";
         const err_sql3 = "UPDATE bible set greeting = 'Hello'";
-        let err1 = null;
-        let err2 = null;
-        let err3 = null;
 
         // Act
-        SQLite.Procedure((s) => {
+        const err = SQLite.Procedure((s) => {
             s.Execute(sql_init);
-            err1 = s.Execute(err_sql1, [parts.s, parts.n, parts.x]);
-            err2 = s.Execute(err_sql2);
-            err3 = s.Execute(err_sql3);
+            s.Execute(err_sql1, [parts.s, parts.n, parts.x]);
+            s.Execute(err_sql2);
+            s.Execute(err_sql3);
         });
             
         // Assert
-        expect(err1 === null).toEqual(false);
-        expect(err2 === null).toEqual(false);
-        expect(err3 === null).toEqual(false);
+        expect(err === null).toEqual(false);
+        console.log(err?.message);
     });
 
     it("can make new database", () => {
