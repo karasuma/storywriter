@@ -9,6 +9,7 @@ export class SQLite {
         try {
             queries(sqlite);
             sqlite.DB().prepare("COMMIT").run();
+            sqlite.DB().prepare("VACUUM").run();
         } catch(ex: unknown) {
             return ex as Error;
         } finally {
