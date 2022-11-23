@@ -31,22 +31,22 @@
 </style>
 
 <script lang="ts">
-import ViewSelection from '@/logics/models/view-selection';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { Options, Vue } from 'vue-class-component';
 
 @Options({
     props: {
-        selection: {
-            type: ViewSelection,
+        vm: {
+            type: StoryWriterObject,
             required: true
         }
     },
     methods: {
         changeView(view: number): void {
-            this.selection.ChangeCurrentView(view);
+            this.vm.currentView = view;
         },
         borderCss(view: number): string {
-            if(view == this.selection.currentView) {
+            if(view == this.vm.currentView) {
                 return "opacity: 1; border-left: solid 2px orange;"
             }
             return ""
@@ -55,6 +55,6 @@ import { Options, Vue } from 'vue-class-component';
 })
 
 export default class MenuView extends Vue {
-    selection!: ViewSelection;
+    vm!: StoryWriterObject;
 }
 </script>

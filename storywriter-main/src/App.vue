@@ -17,12 +17,12 @@
     </div>
     <div class="contents" v-else>
       <div class="menu">
-        <MenuView :selection="viewState" />
+        <MenuView :vm="vm" />
       </div>
 
       <div class="main">
         <StoryMainView v-if="showMe(1)" :vm="vm" />
-        <TimelineView v-if="showMe(2)" :vm="vm" :selection="viewState" />
+        <TimelineView v-if="showMe(2)" :vm="vm" />
         <DictionaryView v-if="showMe(3)" :vm="vm" />
         <ActorView v-if="showMe(4)" :vm="vm" />
         <ChatView v-if="showMe(5)" :vm="vm" />
@@ -102,7 +102,6 @@ import ControlView from '@/views/controls/Control.vue';
 import MenuView from '@/views/menu/Menu.vue';
 import InputDialog from './views/dialogs/InputDialog.vue';
 import MessageDialog from './views/dialogs/MessageDialog.vue';
-import ViewSelection from './logics/models/view-selection';
 import StoryMainView from './views/story/StoryMainView.vue';
 import TimelineView from './views/timeline/TimelineView.vue';
 import DictionaryView from './views/dictionary/DictionaryView.vue';
@@ -130,13 +129,12 @@ import SettingView from './views/SettingView.vue';
   },
   methods: {
     showMe(view: number): boolean {
-      return this.viewState.currentView == view;
+      return this.vm.currentView == view;
     }
   }
 })
 
 export default class App extends Vue {
-  viewState = new ViewSelection();
   vm = new StoryWriterObjectSample()
 }
 

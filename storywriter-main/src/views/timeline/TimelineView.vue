@@ -134,7 +134,6 @@
 import { Defs } from '@/logics/models/defs';
 import { Stories, StoryData } from '@/logics/models/story-data';
 import { StoryWriterObject, StoryWriterObjectSample } from '@/logics/models/storywriter-object';
-import ViewSelection from '@/logics/models/view-selection';
 import { Options, Vue } from 'vue-class-component';
 import ColorPalette from '../commons/ColorPalette.vue';
 
@@ -145,10 +144,6 @@ import ColorPalette from '../commons/ColorPalette.vue';
     props: {
         vm: {
             type: StoryWriterObject,
-            required: true
-        },
-        selection: {
-            type: ViewSelection,
             required: true
         }
     },
@@ -213,14 +208,13 @@ import ColorPalette from '../commons/ColorPalette.vue';
         itemClicked(s: Stories): void {
             this.vm.story.GetFlattenStories().forEach((x: Stories) => x.isEditing = false);
             s.isEditing = true;
-            this.selection.ChangeCurrentView(1);
+            this.vm.currentView = 1;
         }
     }
 })
 
 export default class TimelineView extends Vue {
     vm!: StoryWriterObject;
-    selection!: ViewSelection;
     
     currentColor = "transparent";
     searchstr = "";

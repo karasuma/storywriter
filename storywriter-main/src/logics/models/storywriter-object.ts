@@ -14,6 +14,7 @@ export class StoryWriterObject {
     public chat = Chats.Create();
     public world = Worlds.Create();
     public memo = Memos.Create();
+    public currentView = 1;
 
     public setting = new Setting();
 }
