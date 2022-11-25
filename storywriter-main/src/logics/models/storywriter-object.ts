@@ -1,10 +1,13 @@
+import { ResourceConverter } from "../utils/resource-converter";
 import { Actors } from "./actor-data";
 import { Chats } from "./chat-data";
 import { Defs } from "./defs";
 import { Dictionaries } from "./dictionary-data";
 import { Memos } from "./memo-data";
+import { ItemResource } from "./resource";
 import { Setting } from "./setting";
 import { Stories } from "./story-data";
+import { Utils } from "./utils";
 import { Worlds } from "./world-data";
 
 export class StoryWriterObject {
@@ -81,8 +84,11 @@ export class StoryWriterObjectSample extends StoryWriterObject {
         const w1 = this.world.area.Add("妖怪の山", true);
         const a1 = w1.Add("天狗の里");
         a1.isEditing = true;
-        //a1.description = "天狗が住んでる街。\n広い。";
         a1.AppendDesc("説明", "天狗が住んでる街。\n広い。");
+        const img = ResourceConverter.ConvImageAsBStr(ResourceConverter.FileType.JPG, "C:\\Temp\\image.jpg");
+        a1.image.id = Utils.getUniqueId();
+        a1.image.type = Defs.ResourceType.Image;
+        a1.image.resource = img;
         w1.Add("九天の滝");
         const w2 = this.world.area.Add("守矢神社", true);
         w2.Add("大蝦蟇の池");

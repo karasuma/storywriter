@@ -1,22 +1,24 @@
-import { Actors } from "../actor-data";
-import { Chats } from "../chat-data";
-import { Dictionaries } from "../dictionary-data";
+import { ActorData, ActorDetail, Actors } from "../actor-data";
+import { Chats, ChatTalker } from "../chat-data";
+import { Dictionaries, DictionaryContent } from "../dictionary-data";
 import { Memos } from "../memo-data";
 import { ItemResource } from "../resource";
-import { Stories } from "../story-data";
+import { Stories, StoryContent, StoryItem } from "../story-data";
 import { StoryWriterObject } from "../storywriter-object";
+import ViewSelection from "../view-selection";
 import { Worlds } from "../world-data";
 import { SQLite } from "./database";
 
 export interface IObjectConverter {
     Save(dest: string, obj: StoryWriterObject): Error | null;
-    Load(source: string): StoryWriterObject;
+    Load(source: string): Error | StoryWriterObject;
 }
 
 export class SQLiteConverter implements IObjectConverter {
     public Save(dest: string, obj: StoryWriterObject): Error | null {
         return SQLite.Procedure(s => {
             this.MakeDatabase(dest);
+            s.Execute("delete from resource");
             this.InsertStory(s, obj.story);
             this.InsertDictionary(s, obj.dict);
             this.InsertActor(s, obj.actor);
@@ -25,10 +27,25 @@ export class SQLiteConverter implements IObjectConverter {
             this.InsertMemo(s, obj.memo);
         }, dest);
     }
-    public Load(source: string): StoryWriterObject {
-        throw new Error("Method not implemented.");
+
+    public Load(source: string): Error | StoryWriterObject {
+        const obj = new StoryWriterObject();
+        const err = SQLite.Procedure(s => {
+            const resources = this.ResumeResource(s);
+            obj.story = this.ResumeStory(s);
+            obj.dict = this.ResumeDictionary(s, resources);
+            obj.actor = this.ResumeActor(s, resources);
+            obj.chat = this.ResumeChat(s);
+            obj.world = this.ResumeWorld(s, resources);
+            obj.memo = this.ResumeMemo(s);
+        }, source, false);
+        if(err !== null) return err;
+        obj.currentView = ViewSelection.ViewType.Story;
+        return obj;
     }
 
+    // --- Save methods ---
+    // --------------------
     public MakeDatabase(path: string): Error | null {
         return SQLite.Procedure(s => {
             let hasTable = false;
@@ -72,6 +89,10 @@ export class SQLiteConverter implements IObjectConverter {
     }
 
     private InsertStory(sqlite: SQLite, story: Stories): void {
+        sqlite.Execute("delete from story");
+        sqlite.Execute("delete from storydata");
+        sqlite.Execute("delete from storyitem");
+        sqlite.Execute("delete from storycontent");
         const ins = "insert into";
         story.GetFlattenStories().forEach(s => {
             const id = s.id;
@@ -88,7 +109,7 @@ export class SQLiteConverter implements IObjectConverter {
             const d_time = s.content.time;
             sqlite.Execute(`${ins} storydata values('${d_id}', '${id}', '${d_cap}', '${d_desc}', '${d_col}', ${d_time})`);
 
-            story.content.items.forEach(item => {
+            s.content.items.forEach(item => {
                 sqlite.Execute(`${ins} storyitem values('${item.id}', '${d_id}', '${item.title}', '${item.color}')`);
                 item.stories.forEach(c => {
                     sqlite.Execute(`${ins} storycontent values('${c.id}', '${item.id}', '${c.text}')`);
@@ -98,6 +119,8 @@ export class SQLiteConverter implements IObjectConverter {
     }
 
     private InsertDictionary(sqlite: SQLite, dict: Dictionaries): void {
+        sqlite.Execute("delete from dict");
+        sqlite.Execute("delete from dictres");
         const ins = "insert into";
         dict.dictionaries.forEach(d => {
             sqlite.Execute(`${ins} dict values('${d.id}', '${d.caption}', '${d.description}', ${d.isEditing ? 1 : 0})`);
@@ -109,6 +132,9 @@ export class SQLiteConverter implements IObjectConverter {
     }
 
     private InsertActor(sqlite: SQLite, actor: Actors): void {
+        sqlite.Execute("delete from actor");
+        sqlite.Execute("delete from actorres");
+        sqlite.Execute("delete from actordetail");
         const ins = "insert into";
         actor.actors.forEach(a => {
             sqlite.Execute(`${ins} actor values('${a.id}', '${a.face.id}', '${a.name}', '${a.description}', ${a.isEditing ? 1 : 0})`);
@@ -124,6 +150,8 @@ export class SQLiteConverter implements IObjectConverter {
     }
 
     private InsertChat(sqlite: SQLite, chat: Chats): void {
+        sqlite.Execute("delete from chat");
+        sqlite.Execute("delete from chattl");
         const ins = "insert into";
         chat.chats.forEach(c => {
             sqlite.Execute(`${ins} chat values('${c.id}', '${c.storyId}', '${c.description}', ${c.isEditing ? 1 : 0})`);
@@ -134,6 +162,9 @@ export class SQLiteConverter implements IObjectConverter {
     }
 
     private InsertWorld(sqlite: SQLite, world: Worlds): void {
+        sqlite.Execute("delete from world");
+        sqlite.Execute("delete from worldres");
+        sqlite.Execute("delete from worlddetail");
         const ins = "insert into";
         world.GetFlattenWorlds().forEach(w => {
             const editing = w.isEditing ? 1 : 0;
@@ -151,9 +182,246 @@ export class SQLiteConverter implements IObjectConverter {
     }
 
     private InsertMemo(sqlite: SQLite, memo: Memos): void {
+        sqlite.Execute("delete from memo");
         const ins = "insert into";
         memo.memos.forEach(m => {
             sqlite.Execute(`${ins} memo values('${m.id}', '${m.caption}', '${m.color}', '${m.text}')`);
         });
+    }
+    
+    // --- Load methods ---
+    // --------------------
+    private ResumeResource(sqlite: SQLite): Array<ItemResource> {
+        const resources = new Array<ItemResource>();
+        sqlite.Execute("select * from resource", [], r => {
+            r.forEach(res => {
+                const item = new ItemResource(res['id'] as string, res['type'] as number);
+                item.resource = res['content'] as string;
+                resources.push(item);
+            });
+        });
+        return resources;
+    }
+
+    private ResumeStory(sqlite: SQLite): Stories {
+        const story = Stories.Create();
+        const squery = 
+            "select s.id as id, editing, depth, isdir, sd.id as sdid, caption, desc, color, time " +
+            "from story as s inner join storydata as sd on s.id = sd.sid order by time";
+        sqlite.Execute(squery, [], r => {
+            let currParent = story.root;
+            let currDepth = 1;
+            r.forEach(s => {
+                const id = s['id'] as string;
+                const editing = (s['editing'] as number) == 1;
+                const depth = s['depth'] as number;
+                const isdir = (s['isdir'] as number) == 1;
+                const sdid = s['sdid'] as string;
+                const caption = s['caption'] as string;
+                const desc = s['desc'] as string;
+                const color = s['color'] as string;
+                const time = s['time'] as number;
+
+                while(currDepth > depth) { // Move for ancestor
+                    currParent = currParent.parent;
+                    currDepth--;
+                }
+                if(currDepth < depth) currDepth = depth; // Move for descendant
+
+                const currStory = currParent.AppendStory(caption, isdir);
+                currStory.id = id;
+                currStory.isEditing = editing;
+                currStory.depth = depth;
+                currStory.content.id = sdid;
+                currStory.content.description = desc;
+                currStory.content.color = color;
+                currStory.content.time = time;
+                if(currStory.isDir) currParent = currStory;
+            });
+        });
+        story.root.InitializeHierarchy();
+
+        const items = new Array<[string, StoryItem]>();
+        sqlite.Execute("select * from storyitem", [], r => {
+            r.forEach(item => {
+                const storyitem = new StoryItem(item['title'] as string);
+                storyitem.id = item['id'] as string;
+                storyitem.color = item['color'] as string;
+                items.push([item['sdid'] as string, storyitem]);
+            });
+        });
+
+        sqlite.Execute("select * from storycontent", [], r => {
+            r.forEach(c => {
+                const content = new StoryContent(c['text'] as string);
+                content.id = c['id'] as string;
+                items.find(x => x[1].id === c['siid'] as string)?.[1].stories.push(content);
+            })
+        });
+
+        items.forEach(i => {
+            story.GetFlattenStories().find(x => x.content.id === i[0])?.content.items.push(i[1]);
+        });
+        return story;
+    }
+
+    private ResumeDictionary(sqlite: SQLite, resources: ItemResource[]): Dictionaries {
+        const dict = Dictionaries.Create();
+        sqlite.Execute("select * from dict", [], r => {
+            r.forEach(d => {
+                const item = new DictionaryContent();
+                item.id = d['id'] as string;
+                item.caption = d['caption'] as string;
+                item.description = d['desc'] as string;
+                item.isEditing = (d['editing'] as number) === 1;
+                dict.dictionaries.push(item);
+            });
+        });
+
+        sqlite.Execute("select * from dictres", [], r => {
+            r.forEach(res => {
+                const did = res['did'] as string;
+                const rid = res['rid'] as string;
+                const resource = resources.find(r => r.id === rid);
+                if(resource !== undefined) {
+                    dict.dictionaries.find(d => d.id === did)?.resources.push(resource);
+                }
+            })
+        });
+
+        return dict;
+    }
+
+    private ResumeActor(sqlite: SQLite, resources: ItemResource[]): Actors {
+        const actors = Actors.Create();
+        sqlite.Execute("select * from actor", [], r => {
+            r.forEach(a => {
+                const actor = new ActorData(a['name'] as string);
+                actor.id = a['id'] as string;
+                actor.description = a['desc'] as string;
+                const face = resources.find(r => r.id === a['faceid'] as string);
+                if(face !== undefined) {
+                    actor.face = face;
+                }
+                actor.isEditing = (a['editing'] as number) === 1;
+                actors.actors.push(actor);
+            });
+        });
+
+        sqlite.Execute("select * from actorres", [], r => {
+            r.forEach(res => {
+                const actorId = res['aid'] as string;
+                const img = resources.find(resimg => resimg.id === (res['rid'] as string));
+                if(img !== undefined) {
+                    actors.actors.find(a => a.id === actorId)?.images.push(img);
+                }
+            })
+        });
+
+        sqlite.Execute("select * from actordetail", [], r => {
+            r.forEach(d => {
+                const detail = new ActorDetail(d['title'] as string);
+                detail.id = d['id'] as string;
+                detail.description = d['desc'] as string;
+                actors.actors.find(a => a.id === d['aid'] as string)?.details.push(detail);
+            });
+        });
+
+        return actors;
+    }
+
+    private ResumeChat(sqlite: SQLite): Chats {
+        const chats = Chats.Create();
+
+        sqlite.Execute("select * from chat", [], r => {
+            r.forEach(c => {
+                const chat = chats.Add(c['sid'] as string);
+                chat.id = c['id'] as string;
+                chat.description = c['desc'] as string;
+                chat.isEditing = (c['editing'] as number) === 1;
+            });
+        });
+
+        sqlite.Execute("select * from chattl order by idx", [], r => {
+            r.forEach(tl => {
+                const chat = chats.chats.find(c => c.id === tl['cid'] as string);
+                if(chat !== undefined) {
+                    const timeline = ChatTalker.Create(
+                        tl['id'] as string,
+                        tl['aid'] as string,
+                        tl['txt'] as string
+                    );
+                    chat.timeline.push(timeline);
+                }
+            });
+        });
+
+        return chats;
+    }
+
+    private ResumeWorld(sqlite: SQLite, resources: ItemResource[]): Worlds {
+        const worlds = Worlds.Create();
+        sqlite.Execute("select * from world order by depth", [], r => {
+            let currentDepth = 1;
+            r.forEach(w => {
+                const depth = w['depth'] as number;
+                if(depth === 1) { // Children of the root
+                    const world = worlds.AddWorldData(w['caption'] as string, (w['isdir'] as number) === 1);
+                    const res = resources.find(r => r.id === w['thumbid'] as string);
+                    if(res !== undefined) {
+                        world.image = res;
+                    }
+                } else { // Children of the root's children
+                    if(currentDepth !== depth) {
+                        worlds.MakeFlattenWorlds();
+                        currentDepth = depth;
+                    }
+                    // pw: parent world, not password ----------------↓
+                    const parents = worlds.GetFlattenWorlds().filter(pw => pw.depth === depth - 1);
+                    const parent = parents.find(p => p.id === w['parentid'] as string);
+                    if(parent !== undefined) {
+                        const world = parent.Add(w['caption'] as string, (w['isdir'] as number) === 1);
+                        const res = resources.find(r => r.id === w['thimbid'] as string);
+                        if(res !== undefined) {
+                            world.image = res;
+                        }
+                    }
+                }
+            });
+        });
+        worlds.MakeFlattenWorlds();
+
+        sqlite.Execute("select * from worldres", [], r => {
+            r.forEach(res => {
+                const item = resources.find(i => i.id === res['rid']);
+                if(item !== undefined) {
+                    worlds.GetFlattenWorlds().find(w => w.id === res['wid'] as string)?.resources.push(item);
+                }
+            });
+        });
+
+        sqlite.Execute("select * from worlddetail", [], r => {
+            r.forEach(d => {
+                const world = worlds.GetFlattenWorlds().find(w => w.id === d['wid'] as string);
+                if(world !== undefined) {
+                    const detail = world.AppendDesc(d['title'] as string, d['desc'] as string);
+                    detail.id = d['id'] as string;
+                }
+            });
+        })
+
+        return worlds;
+    }
+
+    private ResumeMemo(sqlite: SQLite): Memos {
+        const memos = Memos.Create();
+        sqlite.Execute("select * from memo", [], r => {
+            r.forEach(m => {
+                const memo = memos.Add(m['caption'] as string, m['txt'] as string);
+                memo.id = m['id'] as string;
+                memo.color = m['color'] as string;
+            });
+        });
+        return memos;
     }
 }

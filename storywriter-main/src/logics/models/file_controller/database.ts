@@ -3,17 +3,19 @@ import Database from 'better-sqlite3';
 export type QueryResult = { [key: string]: unknown };
 
 export class SQLite {
-    public static Procedure(queries: (sqlite: SQLite) => void, filepath?: string): Error | null {
+    public static Procedure(queries: (sqlite: SQLite) => void, filepath?: string, transaction = true): Error | null {
         const sqlite = new SQLite(filepath);
-        sqlite.DB().prepare("BEGIN").run();
+        if(transaction) sqlite.DB().prepare("BEGIN").run();
         try {
             queries(sqlite);
-            sqlite.DB().prepare("COMMIT").run();
+            if(transaction) {
+                sqlite.DB().prepare("COMMIT").run();
+            }
             sqlite.DB().prepare("VACUUM").run();
         } catch(ex: unknown) {
             return ex as Error;
         } finally {
-            if(sqlite.DB().inTransaction) sqlite.DB().prepare("ROLLBACK").run();
+            if(transaction && sqlite.DB().inTransaction) sqlite.DB().prepare("ROLLBACK").run();
             sqlite.Dispose();
         }
         return null;
