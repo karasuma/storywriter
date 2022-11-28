@@ -4,7 +4,6 @@ import { Chats } from "./chat-data";
 import { Defs } from "./defs";
 import { Dictionaries } from "./dictionary-data";
 import { Memos } from "./memo-data";
-import { ItemResource } from "./resource";
 import { Setting } from "./setting";
 import { Stories } from "./story-data";
 import { Utils } from "./utils";
