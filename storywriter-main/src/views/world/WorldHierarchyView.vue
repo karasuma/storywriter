@@ -15,6 +15,10 @@ import InputDialog from '../dialogs/InputDialog.vue';
         vm: {
             type: Worlds,
             required: true
+        },
+        notify: {
+            type: Notifier,
+            required: true
         }
     },
     methods: {
@@ -85,6 +89,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
 
 export default class WorldHierarchyView extends Vue {
     vm!: Worlds;
+    notify!: Notifier;
     
     inputdlg = new InputMessage();
     addTarget = new WorldData(this.vm);
@@ -115,7 +120,7 @@ export default class WorldHierarchyView extends Vue {
         const nextIdx = next.parent.children.findIndex(x => x.id === nextID);
         if(movee.parent.id !== next.parent.id) {
             if(next.FindAncestor(movee.id) !== null && movee.isDir) {
-                Notifier.Send(
+                this.notify.Send(
                     "エリアの親子関係は入れ替えられません。（例：日本国埼玉県 → 埼玉国日本県）",
                     Notifier.Levels.Warning
                 );

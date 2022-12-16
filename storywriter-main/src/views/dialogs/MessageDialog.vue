@@ -124,7 +124,7 @@
 import { Options, Vue } from 'vue-class-component';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { INumberResult } from '@/logics/utils/interfaces';
-import { PropType } from '@vue/runtime-core';
+import { PropType } from 'vue';
 
 @Options({
     props: {

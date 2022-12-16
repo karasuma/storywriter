@@ -1,39 +1,46 @@
 export default class Notifier {
-    private static history = new Array<[string, number]>();
-    private static historyLimit = 10;
+    private history = new Array<[string, number]>();
+    private historyLimit = 10;
 
     public static readonly Levels = {
-        Info: 1,
-        Warning: 2,
-        Alert: 4
+        Info: 0,
+        Warning: 1,
+        Alert: 2
     } as const;
 
-    public static ChangeHistoryLimit(limit = 10, cut = false): void {
-        if(limit <= 1) return;
-        if(cut && Notifier.historyLimit < limit) {
-            Notifier.history.splice(0, Notifier.historyLimit);
-        }
-        Notifier.historyLimit = limit;
+    constructor(limit?: number) {
+        this.historyLimit = limit ?? 10;
     }
 
-    public static Send(message: string, level: number = Notifier.Levels.Info): void {
+    public ChangeHistoryLimit(limit = 10, cut = false): void {
+        if(limit <= 1) return;
+        if(cut && this.historyLimit < limit) {
+            this.history.splice(0, this.historyLimit);
+        }
+        this.historyLimit = limit;
+    }
+
+    public Send(message: string, level: number = Notifier.Levels.Info): void {
         this.history.push([message, level]);
-        if(this.history.length > Notifier.historyLimit) {
+        if(this.history.length > this.historyLimit) {
             this.history.splice(0, 1);
         }
     }
 
-    public static GetLatest(): [string, number] {
-        return Notifier.history[Notifier.history.length - 1];
+    public GetLatest(): [string, number] {
+        if(this.history.length === 0) {
+            return ["You're floating on the sea of imagine now...", Notifier.Levels.Info];
+        }
+        return this.history[this.history.length - 1];
     }
 
-    public static GetMessage(index = -1): [string, number] {
+    public GetMessage(index = -1): [string, number] {
         if(index < 0) {
-            return Notifier.history[Notifier.history.length - 1];
+            return this.GetLatest();
         }
-        if(Notifier.history.length <= index) {
+        if(this.history.length <= index) {
             return ["GetMessage(notifier.ts): History index out of range.", Notifier.Levels.Alert];
         }
-        return Notifier.history[index];
+        return this.history[index];
     }
 }

@@ -2,7 +2,7 @@
 import { Defs } from '@/logics/models/defs';
 import { ItemResource } from '@/logics/models/resource';
 import { IReceiveString } from '@/logics/models/utils';
-import { PropType } from '@vue/runtime-core';
+import { PropType } from 'vue';
 import { Options, Vue } from 'vue-class-component';
 import { Buffer } from 'buffer';
 import MessageDialog from '../dialogs/MessageDialog.vue';

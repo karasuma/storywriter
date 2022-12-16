@@ -1,8 +1,10 @@
+import Notifier from "../utils/notifier";
 import { ResourceConverter } from "../utils/resource-converter";
 import { Actors } from "./actor-data";
 import { Chats } from "./chat-data";
 import { Defs } from "./defs";
 import { Dictionaries } from "./dictionary-data";
+import { Savedata } from "./file_controller/savedata";
 import { Memos } from "./memo-data";
 import { Setting } from "./setting";
 import { Stories } from "./story-data";
@@ -16,9 +18,38 @@ export class StoryWriterObject {
     public chat = Chats.Create();
     public world = Worlds.Create();
     public memo = Memos.Create();
-    public currentView = 1;
 
     public setting = new Setting();
+    public message = new Notifier();
+
+    public currentView = 1;
+    public filepath = "";
+
+    public async Save(): Promise<void> {
+        const result = await Savedata.Save(this.filepath, this);
+        if(result instanceof Error) {
+            this.message.Send(`'${this.filepath}' へのセーブに失敗しました。`, Notifier.Levels.Alert);
+            return;
+        }
+        this.message.Send(`Saved!`, Notifier.Levels.Info);
+    }
+
+    public async Load(): Promise<void> {
+        const result = await Savedata.Load(this.filepath);
+        if(result instanceof Error) {
+            this.message.Send(`'${this.filepath}' からのロードに失敗しました。`, Notifier.Levels.Alert);
+            return;
+        }
+        this.message.Send(`Loaded!`, Notifier.Levels.Info);
+
+        this.story = result.story;
+        this.dict = result.dict;
+        this.actor = result.actor;
+        this.chat = result.chat;
+        this.world = result.world;
+        this.memo = result.memo;
+        this.currentView = 1;
+    }
 }
 
 export class StoryWriterObjectSample extends StoryWriterObject {

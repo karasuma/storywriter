@@ -1,5 +1,5 @@
 import { ipcMain, ipcRenderer } from "electron";
-import { IpcMainEvent, IpcRendererEvent } from "electron/main";
+import { IpcMainInvokeEvent, IpcRendererEvent } from "electron/main";
 
 export class IpcUtils {
     public static readonly DefinedIpcChannels = {
@@ -9,6 +9,7 @@ export class IpcUtils {
         KernelPanic: "KernelPanic",
         MessageBox: "messagebox",
         InputBox: "inputbox",
+        Save: "save"
     } as const;
 
     public static RelayedPrefix = "Relayed::";
@@ -18,7 +19,7 @@ export class IpcUtils {
     }
 
     public static Send(channel: string, ...args: unknown[]): void {
-        ipcRenderer.send(channel, args);
+        ipcRenderer.invoke(channel, args);
     }
 
     public static Receive(channel: string, action: (e: IpcRendererEvent, ...args: unknown[]) => void): void {
@@ -29,20 +30,40 @@ export class IpcUtils {
         IpcUtils.Receive(IpcUtils.GenRelayedChannel(channel), action);
     }
 
-    public static ReceiveOnMain(channel: string, action?: (event?: IpcMainEvent, ...args: unknown[]) => void): void {
-        ipcMain.on(channel, async (e, a) => {
+    public static ReceiveOnMain(channel: string, action?: (event?: IpcMainInvokeEvent, ...args: unknown[]) => void): void {
+        ipcMain.handle(channel, (e, a) => {
             if(action !== undefined) {
                 action(e, a);
             }
         });
     }
 
-    public static RelayOnMain(channel: string, action?: (event?: IpcMainEvent, ...args: unknown[]) => void): void {
-        ipcMain.on(channel, async (e, a) => {
-            e.sender.send(IpcUtils.GenRelayedChannel(channel), a);
+    public static ReceiveOnMainAsync(channel: string, action?: (event?: IpcMainInvokeEvent, ...args: unknown[]) => Promise<void>): void {
+        ipcMain.handle(channel, async (e, a) => {
+            if(action !== undefined) await action(e, a);
+        });
+    }
+
+    public static RelayOnMain(channel: string, action?: (event?: IpcMainInvokeEvent, ...args: unknown[]) => unknown): void {
+        ipcMain.handle(channel, (e, a) => {
             if(action !== undefined) {
-                action(e, a);
+                const resultArgs = action(e, a);
+                console.log(resultArgs);
+                e.sender.send(IpcUtils.GenRelayedChannel(channel), resultArgs);
+                return;
             }
+            e.sender.send(IpcUtils.GenRelayedChannel(channel), a);
+        })
+    }
+
+    public static RelayOnMainAsync(channel: string, action?: (event?: IpcMainInvokeEvent, ...args: unknown[]) => Promise<unknown>): void {
+        ipcMain.handle(channel, async (e, a) => {
+            if(action !== undefined) {
+                const resultArgs = await action(e, a);
+                e.sender.send(IpcUtils.GenRelayedChannel(channel), resultArgs);
+                return;
+            }
+            e.sender.send(IpcUtils.GenRelayedChannel(channel), a);
         })
     }
 }

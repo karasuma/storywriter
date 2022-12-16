@@ -52,6 +52,7 @@
 
 <script lang="ts">
 import { Stories } from '@/logics/models/story-data';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { Utils } from '@/logics/models/utils';
 import DragElement from '@/logics/utils/draggable';
 import InputMessage from '@/logics/utils/input-message';
@@ -66,17 +67,17 @@ import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
         InputDialog,
     },
     props: {
-        root: {
-            type: Stories,
+        vm: {
+            type: StoryWriterObject,
             required: true
         }
     },
     methods: {
         editableStories(): Array<Stories> {
-            return this.root.GetFlattenStories().filter((x: Stories) => x.IsVisible());
+            return this.vm.story.GetFlattenStories().filter((x: Stories) => x.IsVisible());
         },
         inputResult(instr: string): void {
-            this.root.AppendStory(instr, this.createDir);
+            this.vm.story.AppendStory(instr, this.createDir);
         },
         makeStory(): void {
             this.createDir = false;
@@ -108,27 +109,27 @@ import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
 })
 
 export default class StoryHierarchyView extends Vue {
-    root!: Stories;
+    vm!: StoryWriterObject;
     createDir = false;
     inputmsg = new InputMessage();
     drag = new DragElement(document);
 
     public packStories(): void {
-        this.root.InitializeHierarchy();
+        this.vm.story.InitializeHierarchy();
     }
     
     public adjustStories(movedID: string, nextID: string): void {
-        const flatten = this.root.GetFlattenStories();
+        const flatten = this.vm.story.GetFlattenStories();
         const moved = flatten.find(x => x.id === movedID);
         if(moved === undefined) return;
         const movedIdx = moved.parent.children.findIndex(x => x.id === movedID);
 
         if(nextID === DragElement.NoNextElement) {
-            this.root.children.push(moved);
+            this.vm.story.children.push(moved);
             moved.parent.children.splice(movedIdx, 1);
-            moved.ChangeDepth(this.root.depth + 1);
-            moved.parent = this.root;
-            this.root.InitializeHierarchy();
+            moved.ChangeDepth(this.vm.story.depth + 1);
+            moved.parent = this.vm.story;
+            this.vm.story.InitializeHierarchy();
             return;
         }
 
@@ -137,7 +138,7 @@ export default class StoryHierarchyView extends Vue {
         const nextIdx = next.parent.children.findIndex(x => x.id === nextID);
         if(moved.parent.id !== next.parent.id) {
             if(next.FindAncestor(moved.id) !== null && moved.isDir) {
-                Notifier.Send(
+                this.vm.message.Send(
                     "ストーリーの親子関係は入れ替えられません。",
                     Notifier.Levels.Warning
                 );
@@ -150,7 +151,7 @@ export default class StoryHierarchyView extends Vue {
         } else {
             Utils.moveAt(moved.parent.children, movedIdx, nextIdx > movedIdx ? nextIdx - 1 : nextIdx);
         }
-        this.root.InitializeHierarchy();
+        this.vm.story.InitializeHierarchy();
     }
 }
 </script>

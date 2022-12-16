@@ -107,7 +107,7 @@
 <script lang="ts">
 import InputMessage from "@/logics/utils/input-message";
 import { IStringResult } from "@/logics/utils/interfaces";
-import { PropType } from "@vue/runtime-core";
+import { PropType } from 'vue';
 import { Vue, Options } from "vue-class-component";
 
 @Options({

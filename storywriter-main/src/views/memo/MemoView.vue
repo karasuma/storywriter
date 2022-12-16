@@ -32,7 +32,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
             if(result === SystemMessage.MessageResult.OK) {
                 const removeIdx = this.vm.memo.memos.findIndex((x: MemoItem) => x.id === this.currentMemoId);
                 if(removeIdx === -1) {
-                    Notifier.Send(
+                    this.vm.message.Send(
                         "存在しないメモを削除しようとしました。",
                         Notifier.Levels.Alert
                     );

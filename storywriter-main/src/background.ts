@@ -1,6 +1,6 @@
 'use strict'
 
-import { app, protocol, BrowserWindow } from 'electron'
+import { app, protocol, BrowserWindow, dialog } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import { IpcUtils } from './logics/utils/ipc-utils'
@@ -24,12 +24,11 @@ async function createWindow() {
     webPreferences: {
       
       // Required for Spectron testing
-      enableRemoteModule: !!process.env.IS_TEST,
+      //enableRemoteModule: !!process.env.IS_TEST,
       
       // Use pluginOptions.nodeIntegration, leave this alone
       // See nklayman.github.io/vue-cli-plugin-electron-builder/guide/security.html#node-integration for more info
-      nodeIntegration: (process.env
-          .ELECTRON_NODE_INTEGRATION as unknown) as boolean,
+      nodeIntegration: (process.env.ELECTRON_NODE_INTEGRATION as unknown) as boolean,
       contextIsolation: !process.env.ELECTRON_NODE_INTEGRATION
     }
   })
@@ -41,7 +40,7 @@ async function createWindow() {
   } else {
     createProtocol('app')
     // Load the index.html when not in development
-    win.loadURL('app://./index.html')
+    await win.loadURL('app://./index.html')
   }
 
   // Window control events
@@ -53,6 +52,27 @@ async function createWindow() {
   })
   IpcUtils.ReceiveOnMain(IpcUtils.DefinedIpcChannels.Close, () => {
     win.close()
+  })
+
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Save, async (_, a) => {
+    if((a as string).indexOf(".ysd") == -1) {
+      const result = await dialog.showSaveDialog(win, {
+        filters: [
+            { name: "セーブファイル (Your Story Data)", extensions: ["ysd"]},
+            { name: "All Files", extensions: ["*"]}
+        ]}
+      );
+  
+      if(result.filePath === undefined) return "";
+      if(result.filePath.length > 0) {
+        return result.filePath;
+      }
+    }
+    return "";
+
+    //const result = await Savedata.Save(obj.filepath, obj);
+    //if(result instanceof Error) return [result.message, false];
+    //return ["Save completed!", true];
   })
 
   // Edit views -> Dialogs

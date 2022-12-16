@@ -2,22 +2,29 @@ import { StoryWriterObject } from "../storywriter-object";
 import path from 'path';
 import zlib from 'zlib';
 import fs from 'fs';
-import { SQLiteConverter } from "./object-converter";
+import { SQLiteConverterAsync } from "./object-converter";
 
 export class Savedata {
-    public static Save(filepath: string, obj: StoryWriterObject): Promise<Error | null> {
-        const temp = `${path.dirname(filepath)}\\${Date.now().toString(16)}.tmp`;
+    public static GetTempFile(filepath: string): string {
+        const dir = path.dirname(filepath);
+        const tmp = `${Date.now().toString(16)}.tmp`;
+        if(dir.slice(-1)[0] === '\\') return `${dir}${tmp}`;
+        return `${dir}\\${tmp}`;
+    }
+
+    public static async Save(filepath: string, obj: StoryWriterObject): Promise<Error | null> {
+        const temp = Savedata.GetTempFile(filepath);
+        console.log(`${filepath}\n${temp}`);
+
+        // DB
+        const db = new SQLiteConverterAsync();
+        const result = await db.SaveAsync(temp, obj);
+        if(result !== null) {
+            return result;
+        }
         
         return new Promise<Error | null>(resolve => {
             const errPrefix = "Savedata.Save(filepath, storywriter)";
-
-            // DB
-            const db = new SQLiteConverter();
-            const result = db.Save(temp, obj);
-            if(result instanceof Error) {
-                resolve(result);
-                return;
-            }
 
             // Zip
             const zippingStream = fs.createReadStream(temp)
@@ -39,7 +46,7 @@ export class Savedata {
     }
 
     public static async Load(filepath: string): Promise<Error | StoryWriterObject> {
-        const temp = `${path.dirname(filepath)}\\${Date.now().toString(16)}.tmp`;
+        const temp = Savedata.GetTempFile(filepath);
 
         return new Promise<Error | StoryWriterObject>(resolve => {
             //const errPrefix = "Savedata.Save(filepath, storywriter)";
@@ -51,9 +58,9 @@ export class Savedata {
             unzipStream.on('error', err => resolve(err));
 
             // DB & Remove temporary file
-            unzipStream.on('finish', () => {
-                const db = new SQLiteConverter();
-                const result = db.Load(temp);
+            unzipStream.on('finish', async () => {
+                const db = new SQLiteConverterAsync();
+                const result = await db.LoadAsync(temp);
                 if(result instanceof StoryWriterObject) {
                     fs.unlink(temp, () => resolve(result));
                 } else {

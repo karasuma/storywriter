@@ -31,8 +31,8 @@
 <script lang="ts">
 import { Vue, Options } from 'vue-class-component';
 import { Defs } from '@/logics/models/defs';
-import { PropType } from '@vue/runtime-core';
 import { IStringResult } from '@/logics/utils/interfaces';
+import { PropType } from 'vue';
 
 @Options({
     props: {

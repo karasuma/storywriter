@@ -101,7 +101,7 @@
 <script lang="ts">
 import { Defs } from '@/logics/models/defs';
 import { IStringResult } from '@/logics/utils/interfaces';
-import { PropType } from '@vue/runtime-core';
+import { PropType } from 'vue';
 import { Vue, Options } from 'vue-class-component';
 import ColorMessage from '@/logics/utils/color-message';
 

@@ -1,7 +1,7 @@
 <template>
     <div id="StoryMain">
         <div class="hierarchy">
-            <StoryHierarchyView :root="vm.story" />
+            <StoryHierarchyView :vm="vm" />
         </div>
         <div class="edit">
             <div v-if="hasEditingStory()">

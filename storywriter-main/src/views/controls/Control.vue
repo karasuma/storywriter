@@ -4,7 +4,7 @@
         <div class="action">
             <img src="../../assets/dark/config.png" title="設定" class="selectable"
                  :style="settingButtonCss" @click="toggleConfig" />
-            <img src="../../assets/dark/save.png" title="保存" class="selectable" />
+            <img src="../../assets/dark/save.png" title="保存" class="selectable" @click="$emit('onSave')" />
             <img src="../../assets/dark/home.png" title="ホームへ戻る" class="selectable" />
         </div>
 
@@ -130,7 +130,10 @@ import { Setting } from '@/logics/models/setting';
         settingButtonCss: function(): string {
             return this.setting.Visible ? "opacity: 1;" : "";
         }
-    }
+    },
+    emits: [
+        "onSave"
+    ]
 })
 
 export default class ControlView extends Vue {

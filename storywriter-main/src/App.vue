@@ -9,7 +9,7 @@
   <!-- Main contents -->
   <div class="mainwrapper">
     <div class="header">
-      <ControlView :setting="vm.setting" />
+      <ControlView :setting="vm.setting" @onSave="saveCalled()" />
     </div>
 
     <div class="contents" v-if="vm.setting.Visible">
@@ -31,7 +31,8 @@
       </div>
     </div>
 
-    <div class="footer">
+    <div class="footer" :style="footerColor()">
+      <p>{{ footerMessage() }}</p>
     </div>
   </div>
 </template>
@@ -89,7 +90,13 @@ body {
     bottom: 0;
     z-index: 1;
     height: $Footer-Height;
-    background-color: #68be8d;
+    //background-color: #68be8d;
+    display: flex;
+    align-items: center;
+    & > p {
+      margin: 0 6px;
+      font-size: 0.85em;
+    }
   }
 }
 </style>
@@ -110,6 +117,9 @@ import ChatView from './views/chat/ChatView.vue';
 import WorldView from './views/world/WorldView.vue';
 import MemoView from './views/memo/MemoView.vue';
 import SettingView from './views/SettingView.vue';
+import Notifier from './logics/utils/notifier';
+import { IpcUtils } from './logics/utils/ipc-utils';
+import { Savedata } from './logics/models/file_controller/savedata';
 
 @Options({
   components: {
@@ -130,12 +140,48 @@ import SettingView from './views/SettingView.vue';
   methods: {
     showMe(view: number): boolean {
       return this.vm.currentView == view;
+    },
+    saveCalled(): void {
+      this.vm.message.Send("保存中...", Notifier.Levels.Warning);
+      IpcUtils.Send(IpcUtils.DefinedIpcChannels.Save, this.vm.filepath);
+    },
+    async load(): Promise<void> {
+      if(!this.isMounted) return;
+      const el = this.$refs.loadInput as HTMLInputElement;
+      if(el.files === null || el.files.length === 0) return;
+      const recvFile = el.files[0];
+      if(el instanceof Event) el.preventDefault();
+
+      this.vm.filepath = recvFile.path;
+      await this.vm.Load();
+    },
+    footerMessage(): string {
+      return this.vm.message.GetMessage()[0];
+    },
+    footerColor(): string {
+      const colors = ["#165e83", "#028760", "#c9171e"];
+      return `background-color: ${colors[this.vm.message.GetMessage()[1]]};`;
     }
   }
 })
 
 export default class App extends Vue {
-  vm = new StoryWriterObjectSample()
+  vm = new StoryWriterObjectSample();
+
+  mounted(): void {
+    IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Save, async (_, result) => {
+      //const msg = (result as Array<unknown>)[0] as string;
+      //const success = (result as Array<unknown>)[1] as boolean;
+      //this.vm.message.Send(msg, success ? Notifier.Levels.Info : Notifier.Levels.Alert);
+      this.vm.filepath = result as string;
+      const saved = await Savedata.Save(this.vm.filepath, this.vm);
+      if(saved !== null) {
+        this.vm.message.Send(`'${this.vm.filepath}' への保存に失敗しました。`, Notifier.Levels.Alert);
+        return;
+      }
+      this.vm.message.Send(`'${this.vm.filepath}' へ保存しました！`, Notifier.Levels.Info);
+    });
+  }
 }
 
 </script>

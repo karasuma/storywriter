@@ -33,8 +33,8 @@ import { Options, Vue } from "vue-class-component";
         dragging: function(event: MouseEvent) {
             if(!this.pushing && !this.resizing) return;
             this.resizing = false;
-            let iw = this.imageWidth;
-            let ih = this.imageHeight;
+            const iw = this.imageWidth;
+            const ih = this.imageHeight;
             const hmax = Math.max( 0, -((window.outerWidth - (iw * this.currentSize)) / 2) );
             const vmax = Math.max( 0, -((window.outerHeight - (ih * this.currentSize)) / 2) );
             const nextX = this.deltaX + event.movementX * this.moveRatio;

@@ -116,7 +116,7 @@ export default class WorldView extends Vue {
     <MessageDialog :message="message" :result="deleteWorld" />
     <div id="World">
         <div class="hierarchy">
-            <WorldHierarchyView :vm="vm.world" />
+            <WorldHierarchyView :vm="vm.world" :notify="vm.message" />
         </div>
         <div v-if="hasEditingWorld()" class="edit">
             <div class="edit__dispose">
