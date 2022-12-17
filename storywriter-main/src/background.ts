@@ -60,8 +60,8 @@ async function createWindow() {
         filters: [
             { name: "セーブファイル (Your Story Data)", extensions: ["ysd"]},
             { name: "All Files", extensions: ["*"]}
-        ]}
-      );
+        ]
+      });
   
       if(result.filePath === undefined) return "";
       if(result.filePath.length > 0) {
@@ -69,10 +69,17 @@ async function createWindow() {
       }
     }
     return "";
+  })
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Load, async () => {
+    const result = await dialog.showOpenDialog(win, {
+      filters: [
+        { name: "セーブファイル (Your Story Data)", extensions: ["ysd"]},
+        { name: "All Files", extensions: ["*"]}
+      ]
+    });
 
-    //const result = await Savedata.Save(obj.filepath, obj);
-    //if(result instanceof Error) return [result.message, false];
-    //return ["Save completed!", true];
+    if(result.filePaths.length < 1) return "";
+    return result.filePaths[0];
   })
 
   // Edit views -> Dialogs

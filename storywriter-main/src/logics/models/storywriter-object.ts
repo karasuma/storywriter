@@ -27,20 +27,20 @@ export class StoryWriterObject {
 
     public async Save(): Promise<void> {
         const result = await Savedata.Save(this.filepath, this);
-        if(result instanceof Error) {
-            this.message.Send(`'${this.filepath}' へのセーブに失敗しました。`, Notifier.Levels.Alert);
+        if(result !== null) {
+            this.message.Send(`'${this.filepath}' への保存に失敗しました。`, Notifier.Levels.Alert);
             return;
         }
-        this.message.Send(`Saved!`, Notifier.Levels.Info);
+        this.message.Send(`'${this.filepath}' へ保存しました！`, Notifier.Levels.Info);
     }
 
     public async Load(): Promise<void> {
         const result = await Savedata.Load(this.filepath);
         if(result instanceof Error) {
-            this.message.Send(`'${this.filepath}' からのロードに失敗しました。`, Notifier.Levels.Alert);
+            this.message.Send(`'${this.filepath}' からの読み込みに失敗しました。`, Notifier.Levels.Alert);
             return;
         }
-        this.message.Send(`Loaded!`, Notifier.Levels.Info);
+        this.message.Send(`'${this.setting.GetTitle()}' の読み込み成功！`, Notifier.Levels.Info);
 
         this.story = result.story;
         this.dict = result.dict;

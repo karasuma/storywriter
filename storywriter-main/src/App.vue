@@ -9,7 +9,7 @@
   <!-- Main contents -->
   <div class="mainwrapper">
     <div class="header">
-      <ControlView :setting="vm.setting" @onSave="saveCalled()" />
+      <ControlView :setting="vm.setting" @onSave="saveCalled()" @onLoad="loadCalled()" />
     </div>
 
     <div class="contents" v-if="vm.setting.Visible">
@@ -145,15 +145,9 @@ import { Savedata } from './logics/models/file_controller/savedata';
       this.vm.message.Send("保存中...", Notifier.Levels.Warning);
       IpcUtils.Send(IpcUtils.DefinedIpcChannels.Save, this.vm.filepath);
     },
-    async load(): Promise<void> {
-      if(!this.isMounted) return;
-      const el = this.$refs.loadInput as HTMLInputElement;
-      if(el.files === null || el.files.length === 0) return;
-      const recvFile = el.files[0];
-      if(el instanceof Event) el.preventDefault();
-
-      this.vm.filepath = recvFile.path;
-      await this.vm.Load();
+    loadCalled(): void {
+      this.vm.message.Send("読み込み中...", Notifier.Levels.Warning);
+      IpcUtils.Send(IpcUtils.DefinedIpcChannels.Load);
     },
     footerMessage(): string {
       return this.vm.message.GetMessage()[0];
@@ -170,16 +164,13 @@ export default class App extends Vue {
 
   mounted(): void {
     IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Save, async (_, result) => {
-      //const msg = (result as Array<unknown>)[0] as string;
-      //const success = (result as Array<unknown>)[1] as boolean;
-      //this.vm.message.Send(msg, success ? Notifier.Levels.Info : Notifier.Levels.Alert);
       this.vm.filepath = result as string;
-      const saved = await Savedata.Save(this.vm.filepath, this.vm);
-      if(saved !== null) {
-        this.vm.message.Send(`'${this.vm.filepath}' への保存に失敗しました。`, Notifier.Levels.Alert);
-        return;
-      }
-      this.vm.message.Send(`'${this.vm.filepath}' へ保存しました！`, Notifier.Levels.Info);
+      await this.vm.Save();
+    });
+
+    IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Load, async(_, result) => {
+      this.vm.filepath = result as string;
+      await this.vm.Load();
     });
   }
 }

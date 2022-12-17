@@ -34,7 +34,7 @@ export class Savedata {
 
             // DB & Remove temporary file
             zippingStream.on('finish', () => {
-                fs.unlink(temp, err => {
+                fs.rm(temp, err => {
                     if(err !== null) {
                         resolve(new Error(`${errPrefix}: Error occurred on compressing.`));
                     } else {
@@ -62,7 +62,7 @@ export class Savedata {
                 const db = new SQLiteConverterAsync();
                 const result = await db.LoadAsync(temp);
                 if(result instanceof StoryWriterObject) {
-                    fs.unlink(temp, () => resolve(result));
+                    fs.rm(temp, () => resolve(result));
                 } else {
                     resolve(result);
                 }

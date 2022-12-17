@@ -5,6 +5,7 @@
             <img src="../../assets/dark/config.png" title="設定" class="selectable"
                  :style="settingButtonCss" @click="toggleConfig" />
             <img src="../../assets/dark/save.png" title="保存" class="selectable" @click="$emit('onSave')" />
+            <img src="../../assets/dark/folder.png" title="読み込み" class="selectable" @click="$emit('onLoad')" />
             <img src="../../assets/dark/home.png" title="ホームへ戻る" class="selectable" />
         </div>
 
@@ -120,7 +121,9 @@ import { Setting } from '@/logics/models/setting';
             }
         },
         title(): string {
-            return this.setting.GetTitle();
+            const file = this.setting.GetTitle();
+            const title = `${file.length > 0 ? (file + " /") : ""} Storywriter`;
+            return title;
         },
         toggleConfig(): void {
             this.setting.Visible = !this.setting.Visible;
@@ -132,7 +135,8 @@ import { Setting } from '@/logics/models/setting';
         }
     },
     emits: [
-        "onSave"
+        "onSave",
+        "onLoad"
     ]
 })
 

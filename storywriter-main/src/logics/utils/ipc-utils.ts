@@ -9,7 +9,8 @@ export class IpcUtils {
         KernelPanic: "KernelPanic",
         MessageBox: "messagebox",
         InputBox: "inputbox",
-        Save: "save"
+        Save: "save",
+        Load: "load"
     } as const;
 
     public static RelayedPrefix = "Relayed::";

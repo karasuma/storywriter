@@ -7,8 +7,7 @@ export class Setting {
     public ImageExpandRate = new MinMaxPair(1, 20, 3);
 
     public GetTitle(): string {
-        const file = this.URI.split('/').pop() ?? "";
-        return `${file.length > 0 ? (file + " /") : ""} Storywriter`;
+        return this.URI.split('/').pop() ?? "";
     }
 }
 
