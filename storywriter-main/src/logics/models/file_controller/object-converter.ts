@@ -8,6 +8,8 @@ import { StoryWriterObject } from "../storywriter-object";
 import ViewSelection from "../view-selection";
 import { Worlds } from "../world-data";
 import { PlaneSQLite, SQLite } from "./database";
+import zlib from "zlib";
+import { Defs } from "../defs";
 
 export class SQLiteConverter {
     public Save(dest: string, obj: StoryWriterObject): Error | null {
@@ -461,7 +463,7 @@ export class SQLiteConverterAsync {
             if(hasTable) return;
 
             const ct = "create table";
-            await s.Execute(`${ct} resource(id text not null, type integer, content blob)`);
+            await s.Execute(`${ct} resource(id text not null, type integer, content text)`);
 
             await s.Execute(`${ct} story(id text not null, editing integer, depth integer, parentid text, isdir integer)`);
             await s.Execute(`${ct} storydata(id text not null, sid text, caption text, desc text, color text, time integer)`);
@@ -489,7 +491,8 @@ export class SQLiteConverterAsync {
     private async InsertResource(sqlite: PlaneSQLite, r: ItemResource): Promise<void> {
         const result = await sqlite.Execute(`select count(*) as cnt from resource where id = '${r.id}'`);
         if((result[0]["cnt"] as number) === 0) {
-            await sqlite.Execute(`insert into resource values('${r.id}', ${r.type}, '${r.resource}')`);
+            const compRes = zlib.gzipSync(r.resource).toString('base64');
+            await sqlite.Execute(`insert into resource values('${r.id}', ${r.type}, '${compRes}')`);
         }
     }
 
@@ -529,7 +532,7 @@ export class SQLiteConverterAsync {
         const ins = "insert into";
         for(const d of dict.dictionaries) {
             await  sqlite.Execute(`${ins} dict values('${d.id}', '${d.caption}', '${d.description}', ${d.isEditing ? 1 : 0})`);
-            for(const r of d.resources) {
+            for(const r of d.resources.filter(r => r.type !== Defs.ResourceType.None)) {
                 this.InsertResource(sqlite, r);
                 await sqlite.Execute(`${ins} dictres values('${d.id}', '${r.id}')`);
             }
@@ -543,8 +546,8 @@ export class SQLiteConverterAsync {
         const ins = "insert into";
         for(const a of actor.actors) {
             await sqlite.Execute(`${ins} actor values('${a.id}', '${a.face.id}', '${a.name}', '${a.description}', ${a.isEditing ? 1 : 0})`);
-            this.InsertResource(sqlite, a.face);
-            for(const img of a.images) {
+            if(a.face.type !== Defs.ResourceType.None) this.InsertResource(sqlite, a.face);
+            for(const img of a.images.filter(r => r.type !== Defs.ResourceType.None)) {
                 this.InsertResource(sqlite, img);
                 await sqlite.Execute(`${ins} actorres values('${a.id}', '${img.id}')`);
             }
@@ -576,8 +579,8 @@ export class SQLiteConverterAsync {
             const editing = w.isEditing ? 1 : 0;
             const dir = w.isDir ? 1 : 0;
             await sqlite.Execute(`${ins} world values('${w.id}', ${editing}, ${dir}, '${w.parent.id}', ${w.depth}, '${w.caption}', '${w.image.id}')`);
-            this.InsertResource(sqlite, w.image);
-            for(const wr of w.resources) {
+            if(w.image.type !== Defs.ResourceType.None) this.InsertResource(sqlite, w.image);
+            for(const wr of w.resources.filter(r => r.type !== Defs.ResourceType.None)) {
                 this.InsertResource(sqlite, wr);
                 await sqlite.Execute(`${ins} worldres values('${w.id}', '${wr.id}')`);
             }
@@ -601,8 +604,9 @@ export class SQLiteConverterAsync {
         const resources = new Array<ItemResource>();
         const r = await sqlite.Execute("select * from resource");
         r.forEach(res => {
-            const item = new ItemResource(res['id'] as string, res['type'] as number);
-            item.resource = res['content'] as string;
+            const decRes = zlib.unzipSync(Buffer.from(res['content'] as string, 'base64'));
+            const item = new ItemResource(decRes.toString('utf8'), res['type'] as number);
+            item.id = res['id'] as string;
             resources.push(item);
         });
         return resources;
@@ -762,7 +766,9 @@ export class SQLiteConverterAsync {
             const depth = w['depth'] as number;
             if(depth === 1) { // Children of the root
                 const world = worlds.AddWorldData(w['caption'] as string, (w['isdir'] as number) === 1);
-                const res = resources.find(r => r.id === w['thumbid'] as string);
+                world.id = w['id'] as string;
+                world.isEditing = (w['editing'] as number) === 1;
+                const res = resources.find(r => r.id === (w['thumbid'] as string));
                 if(res !== undefined) {
                     world.image = res;
                 }
@@ -776,7 +782,9 @@ export class SQLiteConverterAsync {
                 const parent = parents.find(p => p.id === w['parentid'] as string);
                 if(parent !== undefined) {
                     const world = parent.Add(w['caption'] as string, (w['isdir'] as number) === 1);
-                    const res = resources.find(r => r.id === w['thimbid'] as string);
+                    world.id = w['id'] as string;
+                    world.isEditing = (w['editing'] as number) === 1;
+                    const res = resources.find(r => r.id === (w['thumbid'] as string));
                     if(res !== undefined) {
                         world.image = res;
                     }
