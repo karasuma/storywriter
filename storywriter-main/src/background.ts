@@ -63,6 +63,7 @@ async function createWindow() {
         ]
       });
   
+      if(result.canceled) return IpcUtils.DefinedIpcChannels.Cancel;
       if(result.filePath === undefined) return "";
       if(result.filePath.length > 0) {
         return result.filePath;
@@ -77,7 +78,8 @@ async function createWindow() {
         { name: "All Files", extensions: ["*"]}
       ]
     });
-
+  
+    if(result.canceled) return IpcUtils.DefinedIpcChannels.Cancel;
     if(result.filePaths.length < 1) return "";
     return result.filePaths[0];
   })

@@ -10,7 +10,8 @@ export class IpcUtils {
         MessageBox: "messagebox",
         InputBox: "inputbox",
         Save: "save",
-        Load: "load"
+        Load: "load",
+        Cancel: "cancel"
     } as const;
 
     public static RelayedPrefix = "Relayed::";
