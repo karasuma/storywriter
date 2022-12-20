@@ -7,7 +7,7 @@ export class Setting {
     public ImageExpandRate = new MinMaxPair(1, 20, 3);
 
     public GetTitle(): string {
-        return this.URI.split('/').pop() ?? "";
+        return /[^\\/]+$/u.exec(this.URI)?.[0] ?? "";
     }
 }
 

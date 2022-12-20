@@ -142,11 +142,9 @@ import { Savedata } from './logics/models/file_controller/savedata';
       return this.vm.currentView == view;
     },
     saveCalled(): void {
-      this.vm.message.Send("保存中...", Notifier.Levels.Warning);
       IpcUtils.Send(IpcUtils.DefinedIpcChannels.Save, this.vm.filepath);
     },
     loadCalled(): void {
-      this.vm.message.Send("読み込み中...", Notifier.Levels.Warning);
       IpcUtils.Send(IpcUtils.DefinedIpcChannels.Load);
     },
     footerMessage(): string {
@@ -164,12 +162,14 @@ export default class App extends Vue {
 
   mounted(): void {
     IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Save, async (_, result) => {
-      this.vm.filepath = result as string;
+      if((result as string) === IpcUtils.DefinedIpcChannels.Cancel) return;
+      this.vm.setting.URI = result as string;
       await this.vm.Save();
     });
 
     IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Load, async(_, result) => {
-      this.vm.filepath = result as string;
+      if((result as string) === IpcUtils.DefinedIpcChannels.Cancel) return;
+      this.vm.setting.URI = result as string;
       await this.vm.Load();
     });
   }

@@ -23,21 +23,22 @@ export class StoryWriterObject {
     public message = new Notifier();
 
     public currentView = 1;
-    public filepath = "";
 
     public async Save(): Promise<void> {
-        const result = await Savedata.Save(this.filepath, this);
+        this.message.Send("保存中...", Notifier.Levels.Warning);
+        const result = await Savedata.Save(this.setting.URI, this);
         if(result !== null) {
-            this.message.Send(`'${this.filepath}' への保存に失敗しました。`, Notifier.Levels.Alert);
+            this.message.Send(`'${this.setting.URI}' への保存に失敗しました。`, Notifier.Levels.Alert);
             return;
         }
-        this.message.Send(`'${this.filepath}' へ保存しました！`, Notifier.Levels.Info);
+        this.message.Send(`'${this.setting.URI}' へ保存しました！`, Notifier.Levels.Info);
     }
 
     public async Load(): Promise<void> {
-        const result = await Savedata.Load(this.filepath);
+        this.message.Send("読み込み中...", Notifier.Levels.Warning);
+        const result = await Savedata.Load(this.setting.URI);
         if(result instanceof Error) {
-            this.message.Send(`'${this.filepath}' からの読み込みに失敗しました。`, Notifier.Levels.Alert);
+            this.message.Send(`'${this.setting.URI}' からの読み込みに失敗しました。`, Notifier.Levels.Alert);
             return;
         }
         this.message.Send(`'${this.setting.GetTitle()}' の読み込み成功！`, Notifier.Levels.Info);
