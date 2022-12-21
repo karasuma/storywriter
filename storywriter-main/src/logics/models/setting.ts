@@ -1,5 +1,6 @@
 export class Setting {
-    public Visible = false;
+    public IsSettingVisible = false;
+    public IsTitle = true;
     public URI = "";
 
     public Darkmode = true;

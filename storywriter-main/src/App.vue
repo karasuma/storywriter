@@ -9,11 +9,14 @@
   <!-- Main contents -->
   <div class="mainwrapper">
     <div class="header">
-      <ControlView :setting="vm.setting" @onSave="saveCalled()" @onLoad="loadCalled()" />
+      <ControlView :vm="vm" :setting="vm.setting" @onSave="saveCalled()" @onLoad="loadCalled()" />
     </div>
 
-    <div class="contents" v-if="vm.setting.Visible">
+    <div class="contents" v-if="vm.setting.IsSettingVisible">
       <SettingView :setting="vm.setting" />
+    </div>
+    <div class="contents" v-else-if="vm.setting.IsTitle">
+      <EntranceView :vm="vm" />
     </div>
     <div class="contents" v-else>
       <div class="menu">
@@ -117,9 +120,8 @@ import ChatView from './views/chat/ChatView.vue';
 import WorldView from './views/world/WorldView.vue';
 import MemoView from './views/memo/MemoView.vue';
 import SettingView from './views/SettingView.vue';
-import Notifier from './logics/utils/notifier';
+import EntranceView from './views/entrance/EntranceView.vue';
 import { IpcUtils } from './logics/utils/ipc-utils';
-import { Savedata } from './logics/models/file_controller/savedata';
 
 @Options({
   components: {
@@ -135,7 +137,8 @@ import { Savedata } from './logics/models/file_controller/savedata';
     ChatView,
     WorldView,
     MemoView,
-    SettingView
+    SettingView,
+    EntranceView
   },
   methods: {
     showMe(view: number): boolean {

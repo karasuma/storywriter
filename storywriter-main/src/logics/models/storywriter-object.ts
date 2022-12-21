@@ -50,6 +50,7 @@ export class StoryWriterObject {
         this.world = result.world;
         this.memo = result.memo;
         this.currentView = 1;
+        this.setting.IsTitle = false;
     }
 }
 

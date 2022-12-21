@@ -6,7 +6,8 @@
                  :style="settingButtonCss" @click="toggleConfig" />
             <img src="../../assets/dark/save.png" title="保存" class="selectable" @click="$emit('onSave')" />
             <img src="../../assets/dark/folder.png" title="読み込み" class="selectable" @click="$emit('onLoad')" />
-            <img src="../../assets/dark/home.png" title="ホームへ戻る" class="selectable" />
+            <img src="../../assets/dark/home.png" title="ホーム" class="selectable"
+                 :style="homeButtonCss" @click="toggleHome" />
         </div>
 
         <div class="title" :title="title"><p>{{ title() }}</p></div>
@@ -45,7 +46,7 @@
     & .title {
         -webkit-app-region: drag;
         position: absolute;
-        left: calc( #{$Header-Height} * 3 + 20px );
+        left: calc( #{$Header-Height} * 4 + 20px );
         top: 0;
         // 60px: margin of 3 actions(20px) + 3 window controls padding & margin(106px)
         width: calc( 100% - #{$Header-Height} * 6 - 126px );
@@ -93,12 +94,17 @@ import SystemMessage from '@/logics/utils/SystemMessage';
 import MessageDialog from '@/views/dialogs/MessageDialog.vue';
 import { IpcUtils } from '@/logics/utils/ipc-utils';
 import { Setting } from '@/logics/models/setting';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 
 @Options({
     components: {
         MessageDialog
     },
     props: {
+        vm: {
+            type: StoryWriterObject,
+            required: true
+        },
         setting: {
             type: Setting,
             required: true
@@ -106,6 +112,11 @@ import { Setting } from '@/logics/models/setting';
     },
     methods: {
         close: function() {
+            if(this.setting.IsTitle) {
+                IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
+                return;
+            }
+            this.isClose = true;
             this.message = SystemMessage.Create("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
         },
         minimize: function() {
@@ -115,9 +126,20 @@ import { Setting } from '@/logics/models/setting';
             IpcUtils.Send(IpcUtils.DefinedIpcChannels.Maximize);
         },
         messageBoxResult: function(result: number): void {
-            if(result == SystemMessage.MessageResult.None) return;
-            if(result != SystemMessage.MessageResult.Cancel) {
-                IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
+            if(result === SystemMessage.MessageResult.None || result === SystemMessage.MessageResult.Cancel)
+                return;
+            if(this.isClose) {
+                if(result === SystemMessage.MessageResult.OK) {
+                    IpcUtils.Send(IpcUtils.DefinedIpcChannels.SaveClose);
+                } else {
+                    IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
+                }
+            } else {
+                if(result === SystemMessage.MessageResult.OK) {
+                    IpcUtils.Send(IpcUtils.DefinedIpcChannels.SaveHome);
+                } else {
+                    this.setting.IsTitle = true;
+                }
             }
         },
         title(): string {
@@ -126,12 +148,23 @@ import { Setting } from '@/logics/models/setting';
             return title;
         },
         toggleConfig(): void {
-            this.setting.Visible = !this.setting.Visible;
+            this.setting.IsSettingVisible = !this.setting.IsSettingVisible;
+        },
+        toggleHome(): void {
+            this.isClose = false;
+            this.message = SystemMessage.Create(
+                "確認", 
+                "セーブしてホームへ戻りますか？", 
+                SystemMessage.MessageType.Normal
+            );
         }
     },
     computed: {
         settingButtonCss: function(): string {
-            return this.setting.Visible ? "opacity: 1;" : "";
+            return this.setting.IsSettingVisible ? "opacity: 1;" : "";
+        },
+        homeButtonCss: function(): string {
+            return this.setting.IsTitle ? "opacity: 1;" : "";
         }
     },
     emits: [
@@ -141,7 +174,25 @@ import { Setting } from '@/logics/models/setting';
 })
 
 export default class ControlView extends Vue {
+    vm!: StoryWriterObject;
     setting!: Setting;
     message = new SystemMessage();
+
+    isClose = true;
+
+    mounted(): void {
+        IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.SaveClose, async (_, result) => {
+            if((result as string) === IpcUtils.DefinedIpcChannels.Cancel) return;
+            this.vm.setting.URI = result as string;
+            await this.vm.Save();
+            IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
+        });
+        IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.SaveHome, async (_, result) => {
+            if((result as string) === IpcUtils.DefinedIpcChannels.Cancel) return;
+            this.vm.setting.URI = result as string;
+            await this.vm.Save();
+            this.setting.IsTitle = true;
+        });
+    }
 }
 </script>

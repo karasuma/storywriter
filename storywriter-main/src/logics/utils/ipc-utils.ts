@@ -11,7 +11,9 @@ export class IpcUtils {
         InputBox: "inputbox",
         Save: "save",
         Load: "load",
-        Cancel: "cancel"
+        Cancel: "cancel",
+        SaveClose: "save_close",
+        SaveHome: "save_home"
     } as const;
 
     public static RelayedPrefix = "Relayed::";

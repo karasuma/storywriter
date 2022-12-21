@@ -1,9 +1,10 @@
 'use strict'
 
-import { app, protocol, BrowserWindow, dialog } from 'electron'
+import { app, protocol, BrowserWindow } from 'electron'
 import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import { IpcUtils } from './logics/utils/ipc-utils'
+import { Dialog } from './logics/models/dialogs'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -54,34 +55,18 @@ async function createWindow() {
     win.close()
   })
 
-  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Save, async (_, a) => {
-    if((a as string).indexOf(".ysd") == -1) {
-      const result = await dialog.showSaveDialog(win, {
-        filters: [
-            { name: "セーブファイル (Your Story Data)", extensions: ["ysd"]},
-            { name: "All Files", extensions: ["*"]}
-        ]
-      });
-  
-      if(result.canceled) return IpcUtils.DefinedIpcChannels.Cancel;
-      if(result.filePath === undefined) return "";
-      if(result.filePath.length > 0) {
-        return result.filePath;
-      }
-    }
-    return "";
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Save, async (_, uri) => {
+    return await Dialog.SaveDialog(win, uri as string);
   })
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.SaveClose, async (_, uri) => {
+    return await Dialog.SaveDialog(win, uri as string);
+  })
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.SaveHome, async (_, uri) => {
+    return await Dialog.SaveDialog(win, uri as string);
+  })
+
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Load, async () => {
-    const result = await dialog.showOpenDialog(win, {
-      filters: [
-        { name: "セーブファイル (Your Story Data)", extensions: ["ysd"]},
-        { name: "All Files", extensions: ["*"]}
-      ]
-    });
-  
-    if(result.canceled) return IpcUtils.DefinedIpcChannels.Cancel;
-    if(result.filePaths.length < 1) return "";
-    return result.filePaths[0];
+    return await Dialog.LoadDialog(win);
   })
 
   // Edit views -> Dialogs
