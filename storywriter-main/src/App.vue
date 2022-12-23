@@ -170,7 +170,7 @@ export default class App extends Vue {
       await this.vm.Save();
     });
 
-    IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Load, async(_, result) => {
+    IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Load, async (_, result) => {
       if((result as string) === IpcUtils.DefinedIpcChannels.Cancel) return;
       this.vm.setting.URI = result as string;
       await this.vm.Load();

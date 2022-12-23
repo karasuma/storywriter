@@ -13,7 +13,8 @@ export class IpcUtils {
         Load: "load",
         Cancel: "cancel",
         SaveClose: "save_close",
-        SaveHome: "save_home"
+        SaveHome: "save_home",
+        HomeData: "home_data"
     } as const;
 
     public static RelayedPrefix = "Relayed::";

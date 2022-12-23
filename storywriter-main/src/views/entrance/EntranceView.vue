@@ -1,10 +1,16 @@
 <script lang="ts">
+import { Information } from '@/logics/models/information';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
-import { Enumerable } from '@/logics/models/utils';
 import { IpcUtils } from '@/logics/utils/ipc-utils';
+import SystemMessage from '@/logics/utils/SystemMessage';
 import { Options, Vue } from 'vue-class-component';
+import fs from 'fs';
+import MessageDialog from '../dialogs/MessageDialog.vue';
 
 @Options({
+    components: {
+        MessageDialog
+    },
     props: {
         vm: {
             type: StoryWriterObject,
@@ -14,13 +20,34 @@ import { Options, Vue } from 'vue-class-component';
     methods: {
         printHistory(uri: string): string {
             const file = /[^\\/]+$/u.exec(uri)?.[0] ?? "";
-            return `${file} (${uri})`;
+            return `${file.replace(".ysd", "")}  (${uri})`;
         },
         loadClicked(): void {
             IpcUtils.Send(IpcUtils.DefinedIpcChannels.Load);
         },
         newoneClicked(): void {
             this.vm.setting.IsTitle = false;
+        },
+        async openFile(path: string): Promise<void> {
+            if(!fs.existsSync(path)) {
+                this.currentPathIdx = this.vm.information.previousStories.indexOf(path);
+                this.alertmsg = SystemMessage.Create(
+                    "警告",
+                    "ファイルが見つけられませんでした。履歴から削除しますか？",
+                    SystemMessage.MessageType.Alert,
+                    true
+                );
+                return;
+            }
+            this.vm.setting.URI = path;
+            await this.vm.Load();
+        },
+        msgResult(result: number): void {
+            if(result === SystemMessage.MessageResult.OK) {
+                this.vm.information.previousStories.splice(this.currentPathIdx, 1);
+                const json = JSON.stringify(this.vm.information, null, '\t');
+                IpcUtils.Send(IpcUtils.DefinedIpcChannels.HomeData, json);
+            }
         }
     }
 })
@@ -28,29 +55,37 @@ import { Options, Vue } from 'vue-class-component';
 export default class EntranceView extends Vue {
     vm!: StoryWriterObject;
 
-    caption = "Storywriter";
-    comment = "v1.2.0 renewal!";
     news = new Array<string>();
-    histories = new Array<string>();
+    alertmsg = new SystemMessage();
+    currentPathIdx = "";
 
     mounted(): void {
-        for (const _ of Enumerable.Range(30)) {
-            this.histories.push("C:\\Projects\\Projects\\Projects\\Private\\Storywriter\\storywriter-main\\src\\assets\\darkTemp\\sample.ysd");
-            this.histories.push("C:\\Temp\\test.ysd");   
-        }
+        IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.HomeData, (_, arg) => {
+            const json = arg as string;
+            if(json.length === 0) return; // Because background.ts proceed to save
+            const info = JSON.parse(json) as Information;
+            this.vm.information.Title = info.Title;
+            this.vm.information.Subtitle = info.Subtitle;
+            this.vm.information.News.splice(0);
+            info.News.forEach(n => this.vm.information.News.push(n));
+            this.vm.information.previousStories.splice(0);
+            info.previousStories.forEach(s => this.vm.information.previousStories.push(s));
+        });
+        IpcUtils.Send(IpcUtils.DefinedIpcChannels.HomeData);
     }
 }
 </script>
 
 <template>
+    <MessageDialog :message="alertmsg" :result="msgResult" />
     <div id="entrance">
         <div class="news">
             <div class="news__caption">
-                <p class="news__caption-txt">{{ caption }}</p>
-                <p class="news__caption-comment">{{ comment }}</p>
+                <p class="news__caption-txt">{{ vm.information.Title }}</p>
+                <p class="news__caption-comment">{{ vm.information.Subtitle }}</p>
             </div>
             <div class="news__list">
-                <p class="news__list-item" v-for="item in news" :key="item">
+                <p class="news__list-item" v-for="item in vm.information.News" :key="item">
                     {{ item }}
                 </p>
             </div>
@@ -70,7 +105,8 @@ export default class EntranceView extends Vue {
         <div class="history">
             <p class="history__caption">この間のお話</p>
             <div class="history__list">
-                <p class="history__list-item" v-for="item in histories" :key="item">
+                <p class="history__list-item" v-for="item in vm.information.previousStories" :key="item"
+                    @click="openFile(item)">
                     {{ printHistory(item) }}
                 </p>
             </div>
@@ -111,6 +147,13 @@ export default class EntranceView extends Vue {
                 font-size: 1.3em;
                 margin-left: 12px;
                 margin-bottom: 4px;
+            }
+        }
+        &__list {
+            margin-top: 12px;
+            &-item {
+                color: $Font-Color;
+                line-height: 1.5em;
             }
         }
     }

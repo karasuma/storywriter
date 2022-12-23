@@ -5,6 +5,10 @@ import { createProtocol } from 'vue-cli-plugin-electron-builder/lib'
 import installExtension, { VUEJS3_DEVTOOLS } from 'electron-devtools-installer'
 import { IpcUtils } from './logics/utils/ipc-utils'
 import { Dialog } from './logics/models/dialogs'
+import path from 'path'
+import fs from 'fs/promises';
+import { existsSync } from 'fs';
+import { Information } from './logics/models/information'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -67,6 +71,23 @@ async function createWindow() {
 
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Load, async () => {
     return await Dialog.LoadDialog(win);
+  })
+
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.HomeData, async (_, data) => {
+    const settingFile = path.join(app.getPath('userData'), "home.json");
+    const json = data as string;
+    if(json.length === 0) {
+      // Load
+      let jsonFromFile = JSON.stringify(new Information(), null, '\t');
+      if(existsSync(settingFile)) {
+        jsonFromFile = await fs.readFile(settingFile, 'utf-8');
+      }
+      return jsonFromFile;
+    } else {
+      // Save
+      await fs.writeFile(settingFile, json, 'utf-8');
+      return "";
+    }
   })
 
   // Edit views -> Dialogs
