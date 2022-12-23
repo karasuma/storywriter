@@ -165,8 +165,7 @@ export default class WorldView extends Vue {
                 </div>
             </div>
         </div>
-        <div v-else class="edit">
-            
+        <div v-else class="edit__notfound">
         </div>
     </div>
 </template>

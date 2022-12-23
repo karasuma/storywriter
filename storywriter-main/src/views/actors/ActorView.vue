@@ -202,7 +202,6 @@ export default class ActorView extends Vue {
         </div>
 
         <div v-else class="actorView__notfound">
-            <img src="@/assets/dark/person.png" />
         </div>
     </div>
 </template>
@@ -365,17 +364,6 @@ export default class ActorView extends Vue {
                         @include square-size(32px);
                     }
                 }
-            }
-        }
-
-        &__notfound {
-            & img {
-                position: fixed;
-                left: calc( #{$Menu-Width} + #{$Actor-Width} - 30px );
-                top: 50px;
-                @include square-size(50vw);
-                opacity: 0.1;
-
             }
         }
     }

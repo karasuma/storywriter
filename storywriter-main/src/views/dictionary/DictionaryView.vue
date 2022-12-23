@@ -92,7 +92,6 @@ export default class DictionaryView extends Vue {
                 </div>
             </div>
             <div v-else class="page__notfound">
-                <img src="@/assets/dark/dict.png" />
             </div>
         </div>
     </div>

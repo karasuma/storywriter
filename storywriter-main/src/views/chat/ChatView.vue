@@ -223,7 +223,7 @@ export default class ChatView extends Vue {
             </div>
         </div>
         <div class="mainchat__notfound" v-else>
-
+            <img src="@/assets/dark/chat.png" />
         </div>
     </div>
 </template>
@@ -427,6 +427,17 @@ export default class ChatView extends Vue {
                     margin: 10px;
                     @include square-size(32px);
                 }
+            }
+        }
+
+        &__notfound {
+            position: relative;
+            bottom: -10px;
+            left: -5px;
+            @include square-size(50vw);
+            & img {
+                opacity: 0.1;
+                @include square-size(100%);
             }
         }
     }

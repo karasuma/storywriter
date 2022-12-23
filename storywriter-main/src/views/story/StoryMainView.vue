@@ -8,7 +8,6 @@
                 <StoryEditView :storyData="getEditingStory()" @deleteStory="removeStory" />
             </div>
             <div v-else class="blank">
-                <img src="@/assets/dark/edit.png" />
             </div>
         </div>
     </div>
@@ -51,17 +50,6 @@
         background-color: $Content-BaseColor;
         overflow-y: auto;
         overflow-x: hidden;
-
-        & .blank {
-            position: relative;
-            bottom: -10px;
-            left: -5px;
-            @include square-size(50vw);
-            & img {
-                opacity: 0.1;
-                @include square-size(100%);
-            }
-        }
     }
 }
 </style>
