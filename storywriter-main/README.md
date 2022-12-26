@@ -1,29 +1,20 @@
-# storywriter-main
+# Storywriter
+いろんなののストーリーとか編集したりするやつ
 
-## Project setup
+## Commands
 ```
+// Prepare
 yarn install
-```
 
-### Compiles and hot-reloads for development
-```
+// Execute
 yarn electron:serve
-```
 
-### Compiles and minifies for production
-```
+// Build
 yarn electron:build
-```
 
-### Run your unit tests
-```
+// Test
 yarn jest:unit
 // not "t"est:unit
-```
-
-### Lints and fixes files
-```
-yarn lint
 ```
 
 ### Customize configuration
