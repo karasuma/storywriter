@@ -130,13 +130,13 @@ import { StoryWriterObject } from '@/logics/models/storywriter-object';
                 return;
             if(this.isClose) {
                 if(result === SystemMessage.MessageResult.OK) {
-                    IpcUtils.Send(IpcUtils.DefinedIpcChannels.SaveClose);
+                    IpcUtils.Send(IpcUtils.DefinedIpcChannels.SaveClose, this.vm.setting.URI);
                 } else {
                     IpcUtils.Send(IpcUtils.DefinedIpcChannels.Close);
                 }
             } else {
                 if(result === SystemMessage.MessageResult.OK) {
-                    IpcUtils.Send(IpcUtils.DefinedIpcChannels.SaveHome);
+                    IpcUtils.Send(IpcUtils.DefinedIpcChannels.SaveHome, this.vm.setting.URI);
                 } else {
                     this.setting.IsTitle = true;
                 }

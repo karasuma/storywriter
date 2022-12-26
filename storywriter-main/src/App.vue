@@ -145,7 +145,7 @@ import { IpcUtils } from './logics/utils/ipc-utils';
       return this.vm.currentView == view;
     },
     saveCalled(): void {
-      IpcUtils.Send(IpcUtils.DefinedIpcChannels.Save, this.vm.filepath);
+      IpcUtils.Send(IpcUtils.DefinedIpcChannels.Save, this.vm.setting.URI);
     },
     loadCalled(): void {
       IpcUtils.Send(IpcUtils.DefinedIpcChannels.Load);

@@ -60,13 +60,13 @@ async function createWindow() {
   })
 
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Save, async (_, uri) => {
-    return await Dialog.SaveDialog(win, uri as string);
+    return await Dialog.SaveDialog(win, (uri as string)[0]);
   })
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.SaveClose, async (_, uri) => {
-    return await Dialog.SaveDialog(win, uri as string);
+    return await Dialog.SaveDialog(win, (uri as string)[0]);
   })
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.SaveHome, async (_, uri) => {
-    return await Dialog.SaveDialog(win, uri as string);
+    return await Dialog.SaveDialog(win, (uri as string)[0]);
   })
 
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Load, async () => {
