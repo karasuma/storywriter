@@ -29,7 +29,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
             this.inputdlg = InputMessage.Create(`${isDir ? "エリア" : "場所"}の追加`);
         },
         appendItem(result: string): void {
-            this.vm.AddWorldData(this.addTarget, result, this.inputIsDir);
+            this.vm.AddWorldData(result, this.inputIsDir, this.addTarget);
         },
         leftExpands(depth: number): Array<string> {
             return Enumerable.Range(depth).map(() => Utils.getUniqueId());
