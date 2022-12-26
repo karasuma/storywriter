@@ -1,5 +1,5 @@
 import { Savedata } from "@/logics/models/file_controller/savedata";
-import { StoryWriterObjectSample } from "@/logics/models/storywriter-object";
+import { StoryWriterObject, StoryWriterObjectSample } from "@/logics/models/storywriter-object";
 import fs from 'fs';
 
 describe("savedata.ts", () => {
@@ -24,10 +24,10 @@ describe("savedata.ts", () => {
         const result = await Savedata.Load(filepath);
 
         // Assert
-        if(result instanceof Error) {
-            alert(result.message);
-        } else {
+        if(result instanceof StoryWriterObject) {
             expect(result.story.GetFlattenStories().length).toBeGreaterThan(0);
+        } else {
+            alert(result.message);
         }
     });
 });

@@ -83,7 +83,7 @@ describe("database.ts (w/ better-sqlite3)", () => {
 });
 
 describe("database.ts (w/ node-sqlite3)", () => {
-    it.only("can make bible database", async () => {
+    it("can make bible database", async () => {
         // Arrange
         const parts = [{s: "Genesis", n: 50}, {s: "Exodus", n: 40}];
         const sql1 = "CREATE TABLE bible(title TEXT, number INTEGER)";
