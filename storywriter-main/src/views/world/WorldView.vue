@@ -225,6 +225,7 @@ export default class WorldView extends Vue {
             margin: 15px;
             display: flex;
             font-size: 2em;
+            cursor: text;
         }
         &__image {
             margin: 10px auto;
