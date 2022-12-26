@@ -17,7 +17,24 @@ module.exports = defineConfig({
                     return '[name].js';
                 });
             },
-            externals: ['better-sqlite3']
+            externals: ['better-sqlite3'],
+            builderOptions: {
+                productName: "Storywriter",
+                appId: "com.crowolf.storywriter",
+                win: {
+                    icon: 'src/assets/icon.ico',
+                    target: [
+                        {
+                            target: 'portable',
+                            arch: ['x64']
+                        },
+                        {
+                            target: 'portable',
+                            arch: ['ia32']
+                        }
+                    ]
+                }
+            }
         }
     }
 });
