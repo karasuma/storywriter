@@ -2,7 +2,7 @@ import { StoryWriterObject } from "../storywriter-object";
 import path from 'path';
 import zlib from 'zlib';
 import fs from 'fs';
-import { SQLiteConverterAsync } from "./object-converter";
+import { ObjectConverterAsync } from "./object-converter";
 
 export class Savedata {
     public static GetTempFile(filepath: string): string {
@@ -14,11 +14,9 @@ export class Savedata {
 
     public static async Save(filepath: string, obj: StoryWriterObject): Promise<Error | null> {
         const temp = Savedata.GetTempFile(filepath);
-        console.log(`${filepath}\n${temp}`);
 
         // DB
-        const db = new SQLiteConverterAsync();
-        const result = await db.SaveAsync(temp, obj);
+        const result = await ObjectConverterAsync.SaveAsync(temp, obj);
         if(result !== null) {
             return result;
         }
@@ -49,8 +47,6 @@ export class Savedata {
         const temp = Savedata.GetTempFile(filepath);
 
         return new Promise<Error | StoryWriterObject>(resolve => {
-            //const errPrefix = "Savedata.Save(filepath, storywriter)";
-
             // Unzip
             const unzipStream = fs.createReadStream(filepath)
                                   .pipe(zlib.createGunzip())
@@ -59,8 +55,7 @@ export class Savedata {
 
             // DB & Remove temporary file
             unzipStream.on('finish', async () => {
-                const db = new SQLiteConverterAsync();
-                const result = await db.LoadAsync(temp);
+                const result = await ObjectConverterAsync.LoadAsync(temp);
                 if(result instanceof StoryWriterObject) {
                     fs.rm(temp, () => resolve(result));
                 } else {

@@ -3,9 +3,10 @@ import { StoryWriterObject, StoryWriterObjectSample } from "@/logics/models/stor
 import fs from 'fs';
 
 describe("savedata.ts", () => {
+    const filepath = "C:\\Temp\\storywriter.test.json";
     it("can create savedata", async () => {
         // Arrange
-        const filepath = "C:\\Temp\\save.test";
+        // x
 
         // Act
         const result = await Savedata.Save(filepath, new StoryWriterObjectSample());
@@ -18,7 +19,7 @@ describe("savedata.ts", () => {
     });
     it("can load from savedata", async () => {
         // Arrange
-        const filepath = "C:\\Temp\\sample.test";
+        // x
 
         // Act
         const result = await Savedata.Load(filepath);

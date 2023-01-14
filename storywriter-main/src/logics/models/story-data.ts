@@ -85,11 +85,15 @@ export class Stories implements IUniqueObject {
         });
     }
 
+    public static ResetFlattenStories(root: Stories): void {
+        root.flattenStories.splice(0);
+        root.flattenStories = Stories.MakeFlatStories(root);
+    }
+
     public InitializeHierarchy(): void {
         Stories.ResetAllTimes(this.root);
         Stories.ResetChildrenDepth(this.root);
-        this.root.flattenStories.splice(0);
-        this.root.flattenStories = Stories.MakeFlatStories(this.root);
+        Stories.ResetFlattenStories(this.root);
     }
 
     public GetFlattenStories(): Array<Stories> {
