@@ -1,826 +1,532 @@
 import { ActorData, ActorDetail, Actors } from "../actor-data";
-import { Chats, ChatTalker } from "../chat-data";
+import { ChatItem, Chats, ChatTalker } from "../chat-data";
 import { Dictionaries, DictionaryContent } from "../dictionary-data";
-import { Memos } from "../memo-data";
+import { MemoItem, Memos } from "../memo-data";
 import { ItemResource } from "../resource";
-import { Stories, StoryContent, StoryItem } from "../story-data";
+import { Stories, StoryContent, StoryData, StoryItem } from "../story-data";
 import { StoryWriterObject } from "../storywriter-object";
-import ViewSelection from "../view-selection";
-import { Worlds } from "../world-data";
-import { PlaneSQLite, SQLite } from "./database";
-import zlib from "zlib";
+import { WorldData, WorldDescription, Worlds } from "../world-data";
 import { Defs } from "../defs";
+import fs from 'fs';
 
-export class SQLiteConverter {
-    public Save(dest: string, obj: StoryWriterObject): Error | null {
-        return SQLite.Procedure(s => {
-            this.MakeDatabase(dest);
-            s.Execute("delete from resource");
-            this.InsertStory(s, obj.story);
-            this.InsertDictionary(s, obj.dict);
-            this.InsertActor(s, obj.actor);
-            this.InsertChat(s, obj.chat);
-            this.InsertWorld(s, obj.world);
-            this.InsertMemo(s, obj.memo);
-        }, dest);
+export class ObjectConverterAsync {
+    public resources: Resources[];
+    public stories: StoryDao[];
+    public dictionaries: DictionaryDao[];
+    public actors: ActorDao[];
+    public chats: ChatDao[];
+    public worlds: WorldDao[];
+    public memos: MemoDao[];
+    constructor(res: Resources[], stories: StoryDao[], dicts: DictionaryDao[],
+        actors: ActorDao[], chats: ChatDao[], worlds: WorldDao[], memos: MemoDao[]) {
+            this.resources = res;
+            this.stories = stories;
+            this.dictionaries = dicts;
+            this.actors = actors;
+            this.chats = chats;
+            this.worlds = worlds;
+            this.memos = memos;
     }
 
-    public Load(source: string): Error | StoryWriterObject {
-        const obj = new StoryWriterObject();
-        const err = SQLite.Procedure(s => {
-            const resources = this.ResumeResource(s);
-            obj.story = this.ResumeStory(s);
-            obj.dict = this.ResumeDictionary(s, resources);
-            obj.actor = this.ResumeActor(s, resources);
-            obj.chat = this.ResumeChat(s);
-            obj.world = this.ResumeWorld(s, resources);
-            obj.memo = this.ResumeMemo(s);
-        }, source, false);
-        if(err !== null) return err;
-        obj.currentView = ViewSelection.ViewType.Story;
-        return obj;
-    }
-
-    // --- Save methods ---
-    // --------------------
-    public MakeDatabase(path: string): Error | null {
-        return SQLite.Procedure(s => {
-            let hasTable = false;
-            s.Execute("select count(*) as tc from sqlite_master where type='table'", [], r => {
-                hasTable = r[0]['tc'] as number > 0;
-            });
-            if(hasTable) return;
-
-            const ct = "create table";
-            s.Execute(`${ct} resource(id text not null, type integer, content blob)`);
-
-            s.Execute(`${ct} story(id text not null, editing integer, depth integer, parentid text, isdir integer)`);
-            s.Execute(`${ct} storydata(id text not null, sid text, caption text, desc text, color text, time integer)`);
-            s.Execute(`${ct} storyitem(id text not null, sdid text, title text, color text)`);
-            s.Execute(`${ct} storycontent(id text not null, siid text, txt text)`);
-
-            s.Execute(`${ct} dict(id text not null, caption text, desc text, editing integer)`);
-            s.Execute(`${ct} dictres(did text, rid text)`);
-
-            s.Execute(`${ct} actor(id text not null, faceid text, name text, desc text, editing number)`);
-            s.Execute(`${ct} actorres(aid text, rid text)`);
-            s.Execute(`${ct} actordetail(id text, aid text, title text, desc text)`);
-
-            s.Execute(`${ct} chat(id text not null, sid text, desc text, editing integer)`);
-            s.Execute(`${ct} chattl(id text not null, cid text, idx integer, aid text, txt text)`);
-
-            s.Execute(`${ct} world(id text not null, editing integer, isdir integer, parentid text, depth integer, caption text, thumbid text)`);
-            s.Execute(`${ct} worldres(wid text, rid text)`);
-            s.Execute(`${ct} worlddetail(id text not null, wid text, title text, desc text)`);
-
-            s.Execute(`${ct} memo(id text not null, caption text, color text, txt text)`);
-        }, path);
-    }
-
-    private InsertResource(sqlite: SQLite, r: ItemResource): void {
-        sqlite.Execute(`select count(*) as cnt from resource where id = '${r.id}'`, [], result => {
-            if((result[0]["cnt"] as number) === 0) {
-                sqlite.Execute(`insert into resource values('${r.id}', ${r.type}, '${r.resource}')`);
-            }
+    public static SaveAsync(dest: string, obj: StoryWriterObject): Promise<Error | null> {
+        return new Promise<Error | null>((resolve, reject) => {
+            setTimeout(() => {
+                reject("TIMEOUT on SaveAsync");
+            }, 10 * 1000);
+            // Extract resources (Dict, Actor, World)
+            const resources = obj.dict.dictionaries.map(d => d.resources)
+                .concat(obj.actor.actors.map(a => a.images.concat(a.face)))
+                .concat(obj.world.GetFlattenWorlds().map(w => w.resources.concat(w.image)))
+                .flatMap(res => res)
+                .map(res => Resources.Conv(res));
+            // Create simple data objects
+            const stories = StoryDao.Conv(obj.story);
+            const dicts = DictionaryDao.Conv(obj.dict);
+            const actors = ActorDao.Conv(obj.actor);
+            const chats = ChatDao.Conv(obj.chat);
+            const worlds = WorldDao.Conv(obj.world);
+            const memos = MemoDao.Conv(obj.memo);
+            const dao = new ObjectConverterAsync(resources, stories, dicts, actors, chats, worlds, memos);
+            // To JSON
+            const json = JSON.stringify(dao, undefined, '\t');
+            const compress = Buffer.from(json, 'utf-8').toString('base64');
+            fs.writeFile(dest, compress, {encoding: 'utf-8'}, err => resolve(err));
         });
     }
 
-    private InsertStory(sqlite: SQLite, story: Stories): void {
-        sqlite.Execute("delete from story");
-        sqlite.Execute("delete from storydata");
-        sqlite.Execute("delete from storyitem");
-        sqlite.Execute("delete from storycontent");
-        const ins = "insert into";
-        story.GetFlattenStories().forEach(s => {
-            const id = s.id;
-            const editing = s.isEditing;
-            const depth = s.depth;
-            const pid = s.parent.id;
-            const isdir = s.isDir ? 1 : 0;
-            sqlite.Execute(`${ins} story values('${id}', ${editing}, ${depth}, '${pid}', ${isdir})`);
-
-            const d_id = s.content.id;
-            const d_cap = s.content.caption;
-            const d_desc = s.content.description;
-            const d_col = s.content.color;
-            const d_time = s.content.time;
-            sqlite.Execute(`${ins} storydata values('${d_id}', '${id}', '${d_cap}', '${d_desc}', '${d_col}', ${d_time})`);
-
-            s.content.items.forEach(item => {
-                sqlite.Execute(`${ins} storyitem values('${item.id}', '${d_id}', '${item.title}', '${item.color}')`);
-                item.stories.forEach(c => {
-                    sqlite.Execute(`${ins} storycontent values('${c.id}', '${item.id}', '${c.text}')`);
-                });
+    public static LoadAsync(src: string): Promise<Error | StoryWriterObject> {
+        return new Promise<Error | StoryWriterObject>((resolve, reject) => {
+            setTimeout(() => {
+                reject("TIMEOUT on LoadAsync");
+            }, 10 * 1000);
+            const readStream = fs.createReadStream(src, 'utf-8');
+            let base64 = "";
+            readStream.on('data', chunk => base64 += chunk);
+            readStream.on('end', () => {
+                // From JSON
+                const decompress = Buffer.from(base64, 'base64').toString('utf-8');
+                const dao = JSON.parse(decompress) as ObjectConverterAsync;
+                // Create Storywriter object data
+                const obj = new StoryWriterObject();
+                obj.story = StoryDao.ConvBack(dao.stories);
+                obj.dict = DictionaryDao.ConvBack(dao.dictionaries, dao.resources);
+                obj.actor = ActorDao.ConvBack(dao.actors, dao.resources);
+                obj.chat = ChatDao.ConvBack(dao.chats);
+                obj.world = WorldDao.ConvBack(dao.worlds, dao.resources);
+                obj.memo = MemoDao.ConvBack(dao.memos);
+                resolve(obj);
             });
+            readStream.on('error', err => resolve(err));
         });
-    }
-
-    private InsertDictionary(sqlite: SQLite, dict: Dictionaries): void {
-        sqlite.Execute("delete from dict");
-        sqlite.Execute("delete from dictres");
-        const ins = "insert into";
-        dict.dictionaries.forEach(d => {
-            sqlite.Execute(`${ins} dict values('${d.id}', '${d.caption}', '${d.description}', ${d.isEditing ? 1 : 0})`);
-            d.resources.forEach(r => {
-                this.InsertResource(sqlite, r);
-                sqlite.Execute(`${ins} dictres values('${d.id}', '${r.id}')`);
-            });
-        });
-    }
-
-    private InsertActor(sqlite: SQLite, actor: Actors): void {
-        sqlite.Execute("delete from actor");
-        sqlite.Execute("delete from actorres");
-        sqlite.Execute("delete from actordetail");
-        const ins = "insert into";
-        actor.actors.forEach(a => {
-            sqlite.Execute(`${ins} actor values('${a.id}', '${a.face.id}', '${a.name}', '${a.description}', ${a.isEditing ? 1 : 0})`);
-            this.InsertResource(sqlite, a.face);
-            a.images.forEach(img => {
-                this.InsertResource(sqlite, img);
-                sqlite.Execute(`${ins} actorres values('${a.id}', '${img.id}')`);
-            });
-            a.details.forEach(d => {
-                sqlite.Execute(`${ins} actordetail values('${d.id}', '${a.id}', '${d.title}', '${d.description}')`);
-            });
-        });
-    }
-
-    private InsertChat(sqlite: SQLite, chat: Chats): void {
-        sqlite.Execute("delete from chat");
-        sqlite.Execute("delete from chattl");
-        const ins = "insert into";
-        chat.chats.forEach(c => {
-            sqlite.Execute(`${ins} chat values('${c.id}', '${c.storyId}', '${c.description}', ${c.isEditing ? 1 : 0})`);
-            c.timeline.forEach((t, i) => {
-                sqlite.Execute(`${ins} chattl values('${t.id}', '${c.id}', ${i}, '${t.actorId}', '${t.text}')`);
-            })
-        });
-    }
-
-    private InsertWorld(sqlite: SQLite, world: Worlds): void {
-        sqlite.Execute("delete from world");
-        sqlite.Execute("delete from worldres");
-        sqlite.Execute("delete from worlddetail");
-        const ins = "insert into";
-        world.GetFlattenWorlds().forEach(w => {
-            const editing = w.isEditing ? 1 : 0;
-            const dir = w.isDir ? 1 : 0;
-            sqlite.Execute(`${ins} world values('${w.id}', ${editing}, ${dir}, '${w.parent.id}', ${w.depth}, '${w.caption}', '${w.image.id}')`);
-            this.InsertResource(sqlite, w.image);
-            w.resources.forEach(wr => {
-                this.InsertResource(sqlite, wr);
-                sqlite.Execute(`${ins} worldres values('${w.id}', '${wr.id}')`);
-            });
-            w.descriptions.forEach(d => {
-                sqlite.Execute(`${ins} worlddetail values('${d.id}', '${w.id}', '${d.title}', '${d.text}')`);
-            })
-        });
-    }
-
-    private InsertMemo(sqlite: SQLite, memo: Memos): void {
-        sqlite.Execute("delete from memo");
-        const ins = "insert into";
-        memo.memos.forEach(m => {
-            sqlite.Execute(`${ins} memo values('${m.id}', '${m.caption}', '${m.color}', '${m.text}')`);
-        });
-    }
-    
-    // --- Load methods ---
-    // --------------------
-    private ResumeResource(sqlite: SQLite): Array<ItemResource> {
-        const resources = new Array<ItemResource>();
-        sqlite.Execute("select * from resource", [], r => {
-            r.forEach(res => {
-                const item = new ItemResource(res['id'] as string, res['type'] as number);
-                item.resource = res['content'] as string;
-                resources.push(item);
-            });
-        });
-        return resources;
-    }
-
-    private ResumeStory(sqlite: SQLite): Stories {
-        const story = Stories.Create();
-        const squery = 
-            "select s.id as id, editing, depth, isdir, sd.id as sdid, caption, desc, color, time " +
-            "from story as s inner join storydata as sd on s.id = sd.sid order by time";
-        sqlite.Execute(squery, [], r => {
-            let currParent = story.root;
-            let currDepth = 1;
-            r.forEach(s => {
-                const id = s['id'] as string;
-                const editing = (s['editing'] as number) == 1;
-                const depth = s['depth'] as number;
-                const isdir = (s['isdir'] as number) == 1;
-                const sdid = s['sdid'] as string;
-                const caption = s['caption'] as string;
-                const desc = s['desc'] as string;
-                const color = s['color'] as string;
-                const time = s['time'] as number;
-
-                while(currDepth > depth) { // Move for ancestor
-                    currParent = currParent.parent;
-                    currDepth--;
-                }
-                if(currDepth < depth) currDepth = depth; // Move for descendant
-
-                const currStory = currParent.AppendStory(caption, isdir);
-                currStory.id = id;
-                currStory.isEditing = editing;
-                currStory.depth = depth;
-                currStory.content.id = sdid;
-                currStory.content.description = desc;
-                currStory.content.color = color;
-                currStory.content.time = time;
-                if(currStory.isDir) currParent = currStory;
-            });
-        });
-        story.root.InitializeHierarchy();
-
-        const items = new Array<[string, StoryItem]>();
-        sqlite.Execute("select * from storyitem", [], r => {
-            r.forEach(item => {
-                const storyitem = new StoryItem(item['title'] as string);
-                storyitem.id = item['id'] as string;
-                storyitem.color = item['color'] as string;
-                items.push([item['sdid'] as string, storyitem]);
-            });
-        });
-
-        sqlite.Execute("select * from storycontent", [], r => {
-            r.forEach(c => {
-                const content = new StoryContent(c['text'] as string);
-                content.id = c['id'] as string;
-                items.find(x => x[1].id === c['siid'] as string)?.[1].stories.push(content);
-            })
-        });
-
-        items.forEach(i => {
-            story.GetFlattenStories().find(x => x.content.id === i[0])?.content.items.push(i[1]);
-        });
-        return story;
-    }
-
-    private ResumeDictionary(sqlite: SQLite, resources: ItemResource[]): Dictionaries {
-        const dict = Dictionaries.Create();
-        sqlite.Execute("select * from dict", [], r => {
-            r.forEach(d => {
-                const item = new DictionaryContent();
-                item.id = d['id'] as string;
-                item.caption = d['caption'] as string;
-                item.description = d['desc'] as string;
-                item.isEditing = (d['editing'] as number) === 1;
-                dict.dictionaries.push(item);
-            });
-        });
-
-        sqlite.Execute("select * from dictres", [], r => {
-            r.forEach(res => {
-                const did = res['did'] as string;
-                const rid = res['rid'] as string;
-                const resource = resources.find(r => r.id === rid);
-                if(resource !== undefined) {
-                    dict.dictionaries.find(d => d.id === did)?.resources.push(resource);
-                }
-            })
-        });
-
-        return dict;
-    }
-
-    private ResumeActor(sqlite: SQLite, resources: ItemResource[]): Actors {
-        const actors = Actors.Create();
-        sqlite.Execute("select * from actor", [], r => {
-            r.forEach(a => {
-                const actor = new ActorData(a['name'] as string);
-                actor.id = a['id'] as string;
-                actor.description = a['desc'] as string;
-                const face = resources.find(r => r.id === a['faceid'] as string);
-                if(face !== undefined) {
-                    actor.face = face;
-                }
-                actor.isEditing = (a['editing'] as number) === 1;
-                actors.actors.push(actor);
-            });
-        });
-
-        sqlite.Execute("select * from actorres", [], r => {
-            r.forEach(res => {
-                const actorId = res['aid'] as string;
-                const img = resources.find(resimg => resimg.id === (res['rid'] as string));
-                if(img !== undefined) {
-                    actors.actors.find(a => a.id === actorId)?.images.push(img);
-                }
-            })
-        });
-
-        sqlite.Execute("select * from actordetail", [], r => {
-            r.forEach(d => {
-                const detail = new ActorDetail(d['title'] as string);
-                detail.id = d['id'] as string;
-                detail.description = d['desc'] as string;
-                actors.actors.find(a => a.id === d['aid'] as string)?.details.push(detail);
-            });
-        });
-
-        return actors;
-    }
-
-    private ResumeChat(sqlite: SQLite): Chats {
-        const chats = Chats.Create();
-
-        sqlite.Execute("select * from chat", [], r => {
-            r.forEach(c => {
-                const chat = chats.Add(c['sid'] as string);
-                chat.id = c['id'] as string;
-                chat.description = c['desc'] as string;
-                chat.isEditing = (c['editing'] as number) === 1;
-            });
-        });
-
-        sqlite.Execute("select * from chattl order by idx", [], r => {
-            r.forEach(tl => {
-                const chat = chats.chats.find(c => c.id === tl['cid'] as string);
-                if(chat !== undefined) {
-                    const timeline = ChatTalker.Create(
-                        tl['id'] as string,
-                        tl['aid'] as string,
-                        tl['txt'] as string
-                    );
-                    chat.timeline.push(timeline);
-                }
-            });
-        });
-
-        return chats;
-    }
-
-    private ResumeWorld(sqlite: SQLite, resources: ItemResource[]): Worlds {
-        const worlds = Worlds.Create();
-        sqlite.Execute("select * from world order by depth", [], r => {
-            let currentDepth = 1;
-            r.forEach(w => {
-                const depth = w['depth'] as number;
-                if(depth === 1) { // Children of the root
-                    const world = worlds.AddWorldData(w['caption'] as string, (w['isdir'] as number) === 1);
-                    const res = resources.find(r => r.id === w['thumbid'] as string);
-                    if(res !== undefined) {
-                        world.image = res;
-                    }
-                } else { // Children of the root's children
-                    if(currentDepth !== depth) {
-                        worlds.MakeFlattenWorlds();
-                        currentDepth = depth;
-                    }
-                    // pw: parent world, not password ----------------↓
-                    const parents = worlds.GetFlattenWorlds().filter(pw => pw.depth === depth - 1);
-                    const parent = parents.find(p => p.id === w['parentid'] as string);
-                    if(parent !== undefined) {
-                        const world = parent.Add(w['caption'] as string, (w['isdir'] as number) === 1);
-                        const res = resources.find(r => r.id === w['thimbid'] as string);
-                        if(res !== undefined) {
-                            world.image = res;
-                        }
-                    }
-                }
-            });
-        });
-        worlds.MakeFlattenWorlds();
-
-        sqlite.Execute("select * from worldres", [], r => {
-            r.forEach(res => {
-                const item = resources.find(i => i.id === res['rid']);
-                if(item !== undefined) {
-                    worlds.GetFlattenWorlds().find(w => w.id === res['wid'] as string)?.resources.push(item);
-                }
-            });
-        });
-
-        sqlite.Execute("select * from worlddetail", [], r => {
-            r.forEach(d => {
-                const world = worlds.GetFlattenWorlds().find(w => w.id === d['wid'] as string);
-                if(world !== undefined) {
-                    const detail = world.AppendDesc(d['title'] as string, d['desc'] as string);
-                    detail.id = d['id'] as string;
-                }
-            });
-        })
-
-        return worlds;
-    }
-
-    private ResumeMemo(sqlite: SQLite): Memos {
-        const memos = Memos.Create();
-        sqlite.Execute("select * from memo", [], r => {
-            r.forEach(m => {
-                const memo = memos.Add(m['caption'] as string, m['txt'] as string);
-                memo.id = m['id'] as string;
-                memo.color = m['color'] as string;
-            });
-        });
-        return memos;
     }
 }
 
-export class SQLiteConverterAsync {
-    public async SaveAsync(dest: string, obj: StoryWriterObject): Promise<Error | null> {
-        return await PlaneSQLite.Procedure(async s => {
-            const create = await this.MakeDatabase(dest);
-            if(create !== null) throw create;
-            await s.Execute("delete from resource");
-            await this.InsertStory(s, obj.story);
-            await this.InsertDictionary(s, obj.dict);
-            await this.InsertActor(s, obj.actor);
-            await this.InsertChat(s, obj.chat);
-            await this.InsertWorld(s, obj.world);
-            await this.InsertMemo(s, obj.memo);
-        }, dest);
+class Resources {
+    public id: string;
+    public type: number;
+    public content: string;
+    constructor(id: string, type: number, content: string) {
+        this.id = id;
+        this.type = type;
+        this.content = content;
     }
-
-    public async LoadAsync(source: string): Promise<Error | StoryWriterObject> {
-        const obj = new StoryWriterObject();
-        const err = await PlaneSQLite.Procedure(async s => {
-            const resources = await this.ResumeResource(s);
-            obj.story = await this.ResumeStory(s);
-            obj.dict = await this.ResumeDictionary(s, resources);
-            obj.actor = await this.ResumeActor(s, resources);
-            obj.chat = await this.ResumeChat(s);
-            obj.world = await this.ResumeWorld(s, resources);
-            obj.memo = await this.ResumeMemo(s);
-        }, source, false);
-        if(err !== null) return err;
-        obj.currentView = ViewSelection.ViewType.Story;
+    public static Conv(obj: ItemResource): Resources {
+        return new Resources(obj.id, obj.type, obj.resource);
+    }
+    public static ConvBack(dao: Resources): ItemResource {
+        const obj = new ItemResource(dao.content, dao.type);
+        obj.id = dao.id;
         return obj;
     }
+}
 
-    // --- Save methods ---
-    // --------------------
-    public async MakeDatabase(path: string): Promise<Error | null> {
-        return PlaneSQLite.Procedure(async s => {
-            const hasTable =
-                (await s.Execute("select count(*) as tc from sqlite_master where type='table'"))[0]['tc'] as number > 0;
-            if(hasTable) return;
-
-            const ct = "create table";
-            await s.Execute(`${ct} resource(id text not null, type integer, content text)`);
-
-            await s.Execute(`${ct} story(id text not null, editing integer, depth integer, parentid text, isdir integer)`);
-            await s.Execute(`${ct} storydata(id text not null, sid text, caption text, desc text, color text, time integer)`);
-            await s.Execute(`${ct} storyitem(id text not null, sdid text, title text, color text)`);
-            await s.Execute(`${ct} storycontent(id text not null, siid text, txt text)`);
-
-            await s.Execute(`${ct} dict(id text not null, caption text, desc text, editing integer)`);
-            await s.Execute(`${ct} dictres(did text, rid text)`);
-
-            await s.Execute(`${ct} actor(id text not null, faceid text, name text, desc text, editing number)`);
-            await s.Execute(`${ct} actorres(aid text, rid text)`);
-            await s.Execute(`${ct} actordetail(id text, aid text, title text, desc text)`);
-
-            await s.Execute(`${ct} chat(id text not null, sid text, desc text, editing integer)`);
-            await s.Execute(`${ct} chattl(id text not null, cid text, idx integer, aid text, txt text)`);
-
-            await s.Execute(`${ct} world(id text not null, editing integer, isdir integer, parentid text, depth integer, caption text, thumbid text)`);
-            await s.Execute(`${ct} worldres(wid text, rid text)`);
-            await s.Execute(`${ct} worlddetail(id text not null, wid text, title text, desc text)`);
-
-            await s.Execute(`${ct} memo(id text not null, caption text, color text, txt text)`);
-        }, path);
+class StoryContentDao {
+    public id: string;
+    public text: string;
+    constructor(id: string, text: string) {
+        this.id = id;
+        this.text = text;
     }
-
-    private async InsertResource(sqlite: PlaneSQLite, r: ItemResource): Promise<void> {
-        const result = await sqlite.Execute(`select count(*) as cnt from resource where id = '${r.id}'`);
-        if((result[0]["cnt"] as number) === 0) {
-            const compRes = zlib.gzipSync(r.resource).toString('base64');
-            await sqlite.Execute(`insert into resource values('${r.id}', ${r.type}, '${compRes}')`);
-        }
+    public static Conv(obj: StoryContent): StoryContentDao {
+        return new StoryContentDao(obj.id, obj.text);
     }
+    public static ConvBack(dao: StoryContentDao): StoryContent {
+        const obj = new StoryContent(dao.text);
+        obj.id = dao.id;
+        return obj;
+    }
+}
 
-    private async InsertStory(sqlite: PlaneSQLite, story: Stories): Promise<void> {
-        await sqlite.Execute("delete from story");
-        await sqlite.Execute("delete from storydata");
-        await sqlite.Execute("delete from storyitem");
-        await sqlite.Execute("delete from storycontent");
-        const ins = "insert into";
-        for(const s of story.GetFlattenStories()) {
-            const id = s.id;
-            const editing = s.isEditing;
-            const depth = s.depth;
-            const pid = s.parent.id;
-            const isdir = s.isDir ? 1 : 0;
-            await sqlite.Execute(`${ins} story values('${id}', ${editing}, ${depth}, '${pid}', ${isdir})`);
+class StoryItemDao {
+    public id: string;
+    public title: string;
+    public color: string;
+    public contents: StoryContentDao[] = [];
+    constructor(id: string, title: string, color: string) {
+        this.id = id;
+        this.title = title;
+        this.color = color;
+    }
+    public static Conv(obj: StoryItem): StoryItemDao {
+        const dao = new StoryItemDao(obj.id, obj.title, obj.color);
+        obj.stories.forEach(c => dao.contents.push(StoryContentDao.Conv(c)));
+        return dao;
+    }
+    public static ConvBack(dao: StoryItemDao): StoryItem {
+        const obj = new StoryItem(dao.title);
+        obj.id = dao.id;
+        obj.color = dao.color;
+        dao.contents.forEach(c => obj.stories.push(StoryContentDao.ConvBack(c)));
+        return obj;
+    }
+}
 
-            const d_id = s.content.id;
-            const d_cap = s.content.caption;
-            const d_desc = s.content.description;
-            const d_col = s.content.color;
-            const d_time = s.content.time;
-            await sqlite.Execute(`${ins} storydata values('${d_id}', '${id}', '${d_cap}', '${d_desc}', '${d_col}', ${d_time})`);
+class StoryDataDao {
+    public id: string;
+    public caption: string;
+    public desc: string;
+    public color: string;
+    public time: number;
+    public items: StoryItemDao[] = [];
+    constructor(id: string, capt: string, desc: string, color: string, time: number) {
+        this.id = id;
+        this.caption = capt;
+        this.desc = desc;
+        this.color = color;
+        this.time = time;
+    }
+    public static Conv(obj: StoryData): StoryDataDao {
+        const dao = new StoryDataDao(obj.id, obj.caption, obj.description, obj.color, obj.time);
+        obj.items.forEach(item => dao.items.push(StoryItemDao.Conv(item)));
+        return dao;
+    }
+    public static ConvBack(dao: StoryDataDao): StoryData {
+        const obj = new StoryData();
+        obj.id = dao.id;
+        obj.caption = dao.caption;
+        obj.description = dao.desc;
+        obj.color = dao.color;
+        obj.time = dao.time;
+        dao.items.forEach(item => obj.items.push(StoryItemDao.ConvBack(item)));
+        return obj;
+    }
+}
 
-            for(const item of s.content.items) {
-                await sqlite.Execute(`${ins} storyitem values('${item.id}', '${d_id}', '${item.title}', '${item.color}')`);
-                for(const c of item.stories) {
-                    await sqlite.Execute(`${ins} storycontent values('${c.id}', '${item.id}', '${c.text}')`);
+class StoryDao {
+    public id: string;
+    public editing: number;
+    public depth: number;
+    public parentId: string;
+    public isDir: number;
+    public content: StoryDataDao;
+    constructor(id: string, editing: boolean, depth: number, pid: string, isdir: boolean, content: StoryData) {
+        this.id = id;
+        this.editing = editing ? 1 : 0;
+        this.depth = depth;
+        this.parentId = pid;
+        this.isDir = isdir ? 1 : 0;
+        this.content = StoryDataDao.Conv(content);
+    }
+    public static Conv(obj: Stories): StoryDao[] {
+        //return new StoryDao(obj.id, obj.isEditing, obj.depth, obj.parent.id, obj.isDir);
+        const daos = new Array<StoryDao>();
+        obj.GetFlattenStories().forEach(s => {
+            const dao = new StoryDao(s.id, s.isEditing, s.depth, s.parent.id, s.isDir, s.content);
+            daos.push(dao);
+        });
+        return daos;
+    }
+    public static ConvBack(daos: StoryDao[]): Stories {
+        const stories = Stories.Create();
+        // Get unsorted stories
+        const flatten = daos.map(dao => {
+            const story = new Stories(dao.isDir === 1, dao.content.caption, stories.root);
+            story.id = dao.id;
+            story.isEditing = dao.editing === 1;
+            story.depth = dao.depth;
+            story.isDir = dao.isDir === 1;
+            story.content = StoryDataDao.ConvBack(dao.content);
+            return [story, dao.parentId];
+        }) as Array<[Stories, string]>;
+        //console.log(flatten.map(f => `${f[0].id} ${f[0].content.caption} -> ${f[1]}`))
+
+        // Make story hierarchy and return
+        let currDepth = 0;
+        flatten
+            .sort((l, r) => l[0].depth > r[0].depth ? 1 : -1)
+            .forEach(pair => {
+                const story = pair[0];
+                const parentId = pair[1];
+                if(currDepth !== story.depth) {
+                    currDepth = story.depth;
+                    Stories.ResetAllTimes(stories.root);
+                    Stories.ResetFlattenStories(stories.root);
                 }
-            }
-        }
+                const parent = story.depth === 1
+                    ? stories.root // Root item (depth: 1)
+                    : stories.GetFlattenStories().find(s => s.id === parentId); // Descendant item
+                if(parent !== undefined && parent.isDir) {
+                    story.parent = parent;
+                    parent.children.push(story);
+                }
+            });
+        stories.InitializeHierarchy();
+        return stories;
     }
+}
 
-    private async InsertDictionary(sqlite: PlaneSQLite, dict: Dictionaries): Promise<void> {
-        await sqlite.Execute("delete from dict");
-        await sqlite.Execute("delete from dictres");
-        const ins = "insert into";
-        for(const d of dict.dictionaries) {
-            await  sqlite.Execute(`${ins} dict values('${d.id}', '${d.caption}', '${d.description}', ${d.isEditing ? 1 : 0})`);
-            for(const r of d.resources.filter(r => r.type !== Defs.ResourceType.None)) {
-                this.InsertResource(sqlite, r);
-                await sqlite.Execute(`${ins} dictres values('${d.id}', '${r.id}')`);
-            }
-        }
+class DictionaryDao {
+    public id: string;
+    public caption: string;
+    public desc: string;
+    public editing: number;
+    public resIds: string[] = [];
+    constructor(id: string, capt: string, desc: string, editing: boolean, resIds: string[]) {
+        this.id = id;
+        this.caption = capt;
+        this.desc = desc;
+        this.editing = editing ? 1 : 0;
+        resIds.forEach(rid => resIds.push(rid));
     }
-
-    private async InsertActor(sqlite: PlaneSQLite, actor: Actors): Promise<void> {
-        await sqlite.Execute("delete from actor");
-        await sqlite.Execute("delete from actorres");
-        await sqlite.Execute("delete from actordetail");
-        const ins = "insert into";
-        for(const a of actor.actors) {
-            await sqlite.Execute(`${ins} actor values('${a.id}', '${a.face.id}', '${a.name}', '${a.description}', ${a.isEditing ? 1 : 0})`);
-            if(a.face.type !== Defs.ResourceType.None) this.InsertResource(sqlite, a.face);
-            for(const img of a.images.filter(r => r.type !== Defs.ResourceType.None)) {
-                this.InsertResource(sqlite, img);
-                await sqlite.Execute(`${ins} actorres values('${a.id}', '${img.id}')`);
-            }
-            for(const d of a.details) {
-                await sqlite.Execute(`${ins} actordetail values('${d.id}', '${a.id}', '${d.title}', '${d.description}')`);
-            }
-        }
-    }
-
-    private async InsertChat(sqlite: PlaneSQLite, chat: Chats): Promise<void> {
-        await sqlite.Execute("delete from chat");
-        await sqlite.Execute("delete from chattl");
-        const ins = "insert into";
-        for(const c of chat.chats) {
-            await sqlite.Execute(`${ins} chat values('${c.id}', '${c.storyId}', '${c.description}', ${c.isEditing ? 1 : 0})`);
-            let i = 0;
-            for(const t of c.timeline) {
-                await sqlite.Execute(`${ins} chattl values('${t.id}', '${c.id}', ${i++}, '${t.actorId}', '${t.text}')`);
-            }
-        }
-    }
-
-    private async InsertWorld(sqlite: PlaneSQLite, world: Worlds): Promise<void> {
-        await sqlite.Execute("delete from world");
-        await sqlite.Execute("delete from worldres");
-        await sqlite.Execute("delete from worlddetail");
-        const ins = "insert into";
-        for(const w of world.GetFlattenWorlds()) {
-            const editing = w.isEditing ? 1 : 0;
-            const dir = w.isDir ? 1 : 0;
-            await sqlite.Execute(`${ins} world values('${w.id}', ${editing}, ${dir}, '${w.parent.id}', ${w.depth}, '${w.caption}', '${w.image.id}')`);
-            if(w.image.type !== Defs.ResourceType.None) this.InsertResource(sqlite, w.image);
-            for(const wr of w.resources.filter(r => r.type !== Defs.ResourceType.None)) {
-                this.InsertResource(sqlite, wr);
-                await sqlite.Execute(`${ins} worldres values('${w.id}', '${wr.id}')`);
-            }
-            for(const d of w.descriptions) {
-                await sqlite.Execute(`${ins} worlddetail values('${d.id}', '${w.id}', '${d.title}', '${d.text}')`);
-            }
-        }
-    }
-
-    private async InsertMemo(sqlite: PlaneSQLite, memo: Memos): Promise<void> {
-        await sqlite.Execute("delete from memo");
-        const ins = "insert into";
-        for(const m of memo.memos) {
-            await sqlite.Execute(`${ins} memo values('${m.id}', '${m.caption}', '${m.color}', '${m.text}')`);
-        }
-    }
-    
-    // --- Load methods ---
-    // --------------------
-    private async ResumeResource(sqlite: PlaneSQLite): Promise<Array<ItemResource>> {
-        const resources = new Array<ItemResource>();
-        const r = await sqlite.Execute("select * from resource");
-        r.forEach(res => {
-            const decRes = zlib.unzipSync(Buffer.from(res['content'] as string, 'base64'));
-            const item = new ItemResource(decRes.toString('utf8'), res['type'] as number);
-            item.id = res['id'] as string;
-            resources.push(item);
+    public static Conv(obj: Dictionaries): DictionaryDao[] {
+        const dicts = new Array<DictionaryDao>();
+        obj.dictionaries.forEach(d => {
+            const dict = new DictionaryDao(
+                d.id, d.caption,
+                d.description,
+                d.isEditing,
+                d.resources.filter(res => res.type !== Defs.ResourceType.None).map(res => res.id)
+            );
+            dicts.push(dict);
         });
-        return resources;
+        return dicts;
     }
-
-    private async ResumeStory(sqlite: PlaneSQLite): Promise<Stories> {
-        const story = Stories.Create();
-        const squery = 
-            "select s.id as id, editing, depth, isdir, sd.id as sdid, caption, desc, color, time " +
-            "from story as s inner join storydata as sd on s.id = sd.sid order by time";
-        const r1 = await sqlite.Execute(squery);
-        let currParent = story.root;
-        let currDepth = 1;
-        r1.forEach(s => {
-            const id = s['id'] as string;
-            const editing = (s['editing'] as number) === 1;
-            const depth = s['depth'] as number;
-            const isdir = (s['isdir'] as number) === 1;
-            const sdid = s['sdid'] as string;
-            const caption = s['caption'] as string;
-            const desc = s['desc'] as string;
-            const color = s['color'] as string;
-            const time = s['time'] as number;
-
-            while(currDepth > depth) { // Move for ancestor
-                currParent = currParent.parent;
-                currDepth--;
-            }
-
-            if(currDepth < depth) currDepth = depth; // Move for descendant
-            const currStory = currParent.AppendStory(caption, isdir);
-            currStory.id = id;
-            currStory.isEditing = editing;
-            currStory.depth = depth;
-            currStory.content.id = sdid;
-            currStory.content.description = desc;
-            currStory.content.color = color;
-            currStory.content.time = time;
-            if(currStory.isDir) currParent = currStory;
-        });
-        story.root.InitializeHierarchy();
-
-        const items = new Array<[string, StoryItem]>();
-        const r2 = await sqlite.Execute("select * from storyitem");
-        r2.forEach(item => {
-            const storyitem = new StoryItem(item['title'] as string);
-            storyitem.id = item['id'] as string;
-            storyitem.color = item['color'] as string;
-            items.push([item['sdid'] as string, storyitem]);
-        });
-
-        const r3 = await sqlite.Execute("select * from storycontent");
-        r3.forEach(c => {
-            const content = new StoryContent(c['text'] as string);
-            content.id = c['id'] as string;
-            items.find(x => x[1].id === c['siid'] as string)?.[1].stories.push(content);
-        });
-
-        items.forEach(i => {
-            story.GetFlattenStories().find(x => x.content.id === i[0])?.content.items.push(i[1]);
-        });
-        return story;
-    }
-
-    private async ResumeDictionary(sqlite: PlaneSQLite, resources: ItemResource[]): Promise<Dictionaries> {
+    public static ConvBack(daos: DictionaryDao[], resources: Resources[]): Dictionaries {
         const dict = Dictionaries.Create();
-        const r1 = await sqlite.Execute("select * from dict");
-        r1.forEach(d => {
-            const item = new DictionaryContent();
-            item.id = d['id'] as string;
-            item.caption = d['caption'] as string;
-            item.description = d['desc'] as string;
-            item.isEditing = (d['editing'] as number) === 1;
-            dict.dictionaries.push(item);
+        daos.forEach(d => {
+            const obj = new DictionaryContent();
+            obj.id = d.id;
+            obj.caption = d.caption;
+            obj.description = d.desc;
+            obj.isEditing = d.editing === 1;
+            resources
+                .filter(r => d.resIds.indexOf(r.id) !== -1)
+                .forEach(r => obj.resources.push(Resources.ConvBack(r)));
+            dict.dictionaries.push(obj);
         });
-
-        const r2 = await sqlite.Execute("select * from dictres");
-        r2.forEach(res => {
-            const did = res['did'] as string;
-            const rid = res['rid'] as string;
-            const resource = resources.find(r => r.id === rid);
-            if(resource !== undefined) {
-                dict.dictionaries.find(d => d.id === did)?.resources.push(resource);
-            }
-        });
-
         return dict;
     }
+}
 
-    private async ResumeActor(sqlite: PlaneSQLite, resources: ItemResource[]): Promise<Actors> {
-        const actors = Actors.Create();
-        const r1 = await sqlite.Execute("select * from actor");
-        r1.forEach(a => {
-            const actor = new ActorData(a['name'] as string);
-            actor.id = a['id'] as string;
-            actor.description = a['desc'] as string;
-            const face = resources.find(r => r.id === a['faceid'] as string);
-            if(face !== undefined) {
-                actor.face = face;
-            }
-            actor.isEditing = (a['editing'] as number) === 1;
-            actors.actors.push(actor);
-        });
-
-        const r2 = await sqlite.Execute("select * from actorres");
-        r2.forEach(res => {
-            const actorId = res['aid'] as string;
-            const img = resources.find(resimg => resimg.id === (res['rid'] as string));
-            if(img !== undefined) {
-                actors.actors.find(a => a.id === actorId)?.images.push(img);
-            }
-        });
-
-        const r3 = await sqlite.Execute("select * from actordetail");
-        r3.forEach(d => {
-            const detail = new ActorDetail(d['title'] as string);
-            detail.id = d['id'] as string;
-            detail.description = d['desc'] as string;
-            actors.actors.find(a => a.id === d['aid'] as string)?.details.push(detail);
-        });
-
-        return actors;
+class ActorDetailDao {
+    public id: string;
+    public title: string;
+    public desc: string;
+    constructor(id: string, title: string, desc: string) {
+        this.id = id;
+        this.title = title;
+        this.desc = desc;
     }
+    public static Conv(obj: ActorDetail): ActorDetailDao {
+        return new ActorDetailDao(obj.id, obj.title, obj.description);
+    }
+    public static ConvBack(dao: ActorDetailDao): ActorDetail {
+        const obj = new ActorDetail(dao.title);
+        obj.id = dao.id;
+        obj.description = dao.desc;
+        return obj;
+    }
+}
 
-    private async ResumeChat(sqlite: PlaneSQLite): Promise<Chats> {
+class ActorDao {
+    public id: string;
+    public faceId: string;
+    public name: string;
+    public desc: string;
+    public editing: number;
+    public details: ActorDetailDao[] = [];
+    public resources: string[] = [];
+    constructor(id: string, fid: string, name: string, desc: string, editing: boolean, resIds: string[]) {
+        this.id = id;
+        this.faceId = fid;
+        this.name = name;
+        this.desc = desc;
+        this.editing = editing ? 1 : 0;
+        resIds.forEach(r => this.resources.push(r));
+    }
+    public static Conv(actor: Actors): ActorDao[] {
+        return actor.actors.map(a => {
+                const dao = new ActorDao(
+                    a.id, a.face.id, a.name, a.description, a.isEditing,
+                    a.images.map(img => img.id)
+            );
+            dao.details = a.details.map(d => {
+                return new ActorDetailDao(d.id, d.title, d.description);
+            });
+            return dao;
+        });
+    }
+    public static ConvBack(daos: ActorDao[], resources: Resources[]): Actors {
+        const actor = Actors.Create();
+        daos.forEach(dao => {
+            const data = new ActorData(dao.name);
+            data.id = dao.id;
+            data.description = dao.desc;
+            data.isEditing = dao.editing === 1;
+            const face = resources.find(r => dao.faceId === r.id);
+            if(face !== undefined) data.face = Resources.ConvBack(face);
+            dao.details.forEach(d => data.details.push(ActorDetailDao.ConvBack(d)));
+            resources
+                .filter(r => dao.resources.indexOf(r.id) !== -1)
+                .forEach(r => data.images.push(Resources.ConvBack(r)));
+            actor.actors.push(data);
+        });
+        return actor;
+    }
+}
+
+class ChatTalkDao {
+    public id: string;
+    public actorId: string;
+    public text: string;
+    constructor(id: string, aid: string, text: string) {
+        this.id = id;
+        this.actorId = aid;
+        this.text = text;
+    }
+    public static Conv(obj: ChatTalker): ChatTalkDao {
+        return new ChatTalkDao(obj.id, obj.actorId, obj.text);
+    }
+    public static ConvBack(dao: ChatTalkDao): ChatTalker {
+        const obj = new ChatTalker(dao.id, dao.text);
+        obj.actorId = dao.actorId;
+        return obj;
+    }
+}
+class ChatDao {
+    public id: string;
+    public storyId: string;
+    public desc: string;
+    public timeline: ChatTalkDao[] = [];
+    public editing: number;
+    constructor(id: string, sid: string, desc: string, editing: boolean) {
+        this.id = id;
+        this.storyId = sid;
+        this.desc = desc;
+        this.editing = editing ? 1 : 0;
+    }
+    public static Conv(obj: Chats): ChatDao[] {
+        return obj.chats.map(chat => {
+            const dao = new ChatDao(chat.id, chat.storyId, chat.description, chat.isEditing);
+            chat.timeline.forEach(tl => dao.timeline.push(ChatTalkDao.Conv(tl)));
+            return dao;
+        });
+    }
+    public static ConvBack(daos: ChatDao[]): Chats {
         const chats = Chats.Create();
-
-        const r1 = await sqlite.Execute("select * from chat");
-        r1.forEach(c => {
-            const chat = chats.Add(c['sid'] as string);
-            chat.id = c['id'] as string;
-            chat.description = c['desc'] as string;
-            chat.isEditing = (c['editing'] as number) === 1;
+        daos.forEach(dao => {
+            const chat = new ChatItem(dao.storyId);
+            chat.id = dao.id;
+            chat.description = dao.desc;
+            chat.isEditing = dao.editing === 1;
+            dao.timeline.forEach(tl => chat.timeline.push(ChatTalkDao.ConvBack(tl)));
+            chats.chats.push(chat);
         });
-
-        const r2 = await sqlite.Execute("select * from chattl order by idx");
-        r2.forEach(tl => {
-            const chat = chats.chats.find(c => c.id === tl['cid'] as string);
-            if(chat !== undefined) {
-                const timeline = ChatTalker.Create(
-                    tl['id'] as string,
-                    tl['aid'] as string,
-                    tl['txt'] as string
-                );
-                chat.timeline.push(timeline);
-            }
-        });
-
         return chats;
     }
+}
 
-    private async ResumeWorld(sqlite: PlaneSQLite, resources: ItemResource[]): Promise<Worlds> {
+class WorldDescDao {
+    public id: string;
+    public title: string;
+    public text: string;
+    constructor(id: string, title: string, text: string) {
+        this.id = id;
+        this.title = title;
+        this.text = text;
+    }
+    public static Conv(obj: WorldDescription): WorldDescDao {
+        return new WorldDescDao(obj.id, obj.title, obj.text);
+    }
+    public static ConvBack(dao: WorldDescDao): WorldDescription {
+        const obj = new WorldDescription(dao.title, dao.text);
+        obj.id = dao.id;
+        return obj;
+    }
+}
+class WorldDao {
+    public id: string;
+    public editing: number;
+    public isDir: number;
+    public isExpanding: number;
+    public parentId: string;
+    public depth: number;
+    public caption: string;
+    public thumbId: string;
+    public desc: WorldDescDao[] = [];
+    public resources: string[] = [];
+    constructor(
+        id: string, editing: boolean, isdir: boolean, expand: boolean,
+        pid: string, depth: number, caption: string, tid: string
+    ) {
+        this.id = id;
+        this.editing = editing ? 1 : 0;
+        this.isDir = isdir ? 1 : 0;
+        this.isExpanding = expand ? 1 : 0;
+        this.parentId = pid;
+        this.depth = depth;
+        this.caption = caption;
+        this.thumbId = tid;
+    }
+    public static Conv(obj: Worlds): WorldDao[] {
+        return obj.GetFlattenWorlds().map(world => {
+            const dao = new WorldDao(
+                world.id, world.isEditing, world.isDir, world.isExpanding,
+                world.parent.id, world.depth, world.caption, world.image.id
+            );
+            world.descriptions.forEach(d => dao.desc.push(WorldDescDao.Conv(d)));
+            world.resources.forEach(r => dao.resources.push(r.id));
+            return dao;
+        });
+    }
+    public static ConvBack(daos: WorldDao[], resources: Resources[]): Worlds {
         const worlds = Worlds.Create();
-        const r1 = await sqlite.Execute("select * from world order by depth");
-        let currentDepth = 1;
-        r1.forEach(w => {
-            const depth = w['depth'] as number;
-            if(depth === 1) { // Children of the root
-                const world = worlds.AddWorldData(w['caption'] as string, (w['isdir'] as number) === 1);
-                world.id = w['id'] as string;
-                world.isEditing = (w['editing'] as number) === 1;
-                const res = resources.find(r => r.id === (w['thumbid'] as string));
+        const flatten = daos.map(dao => {
+            const world = new WorldData(worlds);
+            world.id = dao.id;
+            world.isEditing = dao.editing === 1;
+            world.isDir = dao.isDir === 1;
+            world.isExpanding = dao.isExpanding === 1;
+            world.depth = dao.depth;
+            world.caption = dao.caption;
+            dao.desc.forEach(d => world.descriptions.push(WorldDescDao.ConvBack(d)));
+            const thumb = resources.find(r => r.id === dao.thumbId);
+            if(thumb !== undefined) {
+                world.image = Resources.ConvBack(thumb);
+            }
+            dao.resources.forEach(dr => {
+                const res = resources.find(r => r.id === dr);
                 if(res !== undefined) {
-                    world.image = res;
+                    world.resources.push(Resources.ConvBack(res));
                 }
-            } else { // Children of the root's children
-                if(currentDepth !== depth) {
+            });
+            return world;
+        });
+
+        // Make hierarchy
+        let currDepth = 0;
+        flatten
+            .sort((l, r) => l.depth > r.depth ? 1 : -1)
+            .forEach(world => {
+                if(currDepth !== world.depth) {
+                    currDepth = world.depth;
                     worlds.MakeFlattenWorlds();
-                    currentDepth = depth;
                 }
-                // pw: parent world, not password ----------------↓
-                const parents = worlds.GetFlattenWorlds().filter(pw => pw.depth === depth - 1);
-                const parent = parents.find(p => p.id === w['parentid'] as string);
-                if(parent !== undefined) {
-                    const world = parent.Add(w['caption'] as string, (w['isdir'] as number) === 1);
-                    world.id = w['id'] as string;
-                    world.isEditing = (w['editing'] as number) === 1;
-                    const res = resources.find(r => r.id === (w['thumbid'] as string));
-                    if(res !== undefined) {
-                        world.image = res;
+                if(world.depth === 1) {
+                    world.parent = worlds.area;
+                    world.parent.children.push(world);
+                } else {
+                    const parent = worlds.GetFlattenWorlds()
+                        .filter(w => w.depth === world.depth - 1)
+                        .find(w => w.id === daos.find(d => d.id === world.id)?.parentId);
+                    if(parent !== undefined) {
+                        world.parent = parent;
+                        world.parent.children.push(world);
+                    } else {
+                        throw new Error(
+                            "[WorldDao.ConvBack in object-converter.ts] Missing world's parent."
+                        );
                     }
                 }
-            }
-        });
+            });
         worlds.MakeFlattenWorlds();
-
-        const r2 = await sqlite.Execute("select * from worldres");
-        r2.forEach(res => {
-            const item = resources.find(i => i.id === res['rid']);
-            if(item !== undefined) {
-                worlds.GetFlattenWorlds().find(w => w.id === res['wid'] as string)?.resources.push(item);
-            }
-        });
-
-        const r3 = await sqlite.Execute("select * from worlddetail");
-        r3.forEach(d => {
-            const world = worlds.GetFlattenWorlds().find(w => w.id === d['wid'] as string);
-            if(world !== undefined) {
-                const detail = world.AppendDesc(d['title'] as string, d['desc'] as string);
-                detail.id = d['id'] as string;
-            }
-        });
-
+        
         return worlds;
     }
+}
 
-    private async ResumeMemo(sqlite: PlaneSQLite): Promise<Memos> {
-        const memos = Memos.Create();
-        const r = await sqlite.Execute("select * from memo");
-        r.forEach(m => {
-            const memo = memos.Add(m['caption'] as string, m['txt'] as string);
-            memo.id = m['id'] as string;
-            memo.color = m['color'] as string;
+class MemoDao {
+    public id: string;
+    public caption: string;
+    public color: string;
+    public text: string;
+    constructor(id: string, caption: string, color: string, text: string) {
+        this.id = id;
+        this.caption = caption;
+        this.color = color;
+        this.text = text;
+    }
+    public static Conv(obj: Memos): MemoDao[] {
+        return obj.memos.map(m => new MemoDao(m.id, m.caption, m.color, m.text));
+    }
+    public static ConvBack(daos: MemoDao[]): Memos {
+        const memo = Memos.Create();
+        daos.forEach(dao => {
+            const obj = new MemoItem(dao.caption, dao.text);
+            obj.id = dao.id;
+            obj.color = dao.color;
+            memo.memos.push(obj);
         });
-        return memos;
+        return memo;
     }
 }

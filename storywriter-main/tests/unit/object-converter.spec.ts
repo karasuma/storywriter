@@ -1,105 +1,49 @@
-import { PlaneSQLite, SQLite } from "@/logics/models/file_controller/database";
-import { SQLiteConverter, SQLiteConverterAsync } from "@/logics/models/file_controller/object-converter";
-import { StoryWriterObjectSample } from "@/logics/models/storywriter-object";
-import fs from "fs";
+import { ObjectConverterAsync } from "@/logics/models/file_controller/object-converter";
+import { StoryWriterObject, StoryWriterObjectSample } from "@/logics/models/storywriter-object";
 
-describe("object-converter.ts (w/ better-sqlite3)", () => {
-    it("can make DB structure of savedata", () => {
-        // Arrange
-        const conv = new SQLiteConverter();
-        const filepath = "C:\\Temp\\savedata.test.db";
-        if(fs.existsSync(filepath)) fs.rmSync(filepath);
-
-        // Act
-        conv.MakeDatabase(filepath);
-
-        // Assert
-        const fileExists = fs.existsSync(filepath);
-        expect(fileExists).toEqual(true);
-    });
-    it("can save data to DB", () => {
-        // Arrange
-        const conv = new SQLiteConverter();
-        const filepath = "C:\\Temp\\storywriter1.test.db";
-
-        // Act
-        const err = conv.Save(filepath, new StoryWriterObjectSample());
-        SQLite.Procedure(s => {
-            s.Execute(`select count(id) as cnt from memo`);
-        }, filepath, false);
-
-        // Assert
-        if(err !== null) console.log(err.message);
-        expect(err === null).toEqual(true);
-    });
-    it("can load data from DB", () => {
-        // Arrange
-        const conv = new SQLiteConverter();
-        const filepath = "C:\\Temp\\storywriter.sample.db";
-        let stories = 0;
-
-        // Act
-        const result = conv.Load(filepath);
-        const isErr = result instanceof Error;
-        if(!isErr) {
-            SQLite.Procedure(s => {
-                s.Execute("select count(*) as cnt from story", [], r => stories = r[0]['cnt'] as number);
-            }, filepath, false);
-        }
-
-        // Assert
-        if(isErr) console.log((result as Error).message);
-        expect(!isErr && stories === 9).toEqual(true);
-    });
-});
-
-describe("object-converter.ts (w/ node-sqlite3)", () => {
-    it("can make DB structure of savedata", async () => {
-        // Arrange
-        const conv = new SQLiteConverterAsync();
-        const filepath = "C:\\Temp\\savedata.test.db";
-        if(fs.existsSync(filepath)) fs.rmSync(filepath);
-
-        // Act
-        await conv.MakeDatabase(filepath);
-
-        // Assert
-        const fileExists = fs.existsSync(filepath);
-        expect(fileExists).toEqual(true);
-    });
+describe("object-converter.ts", () => {
+    const filepath = "C:\\Temp\\storywriter.test.json";
     it("can save data to DB", async () => {
         // Arrange
-        const conv = new SQLiteConverterAsync();
-        const filepath = "C:\\Temp\\storywriter1.test.db";
+        // x
 
         // Act
-        const err = await conv.SaveAsync(filepath, new StoryWriterObjectSample());
-        await PlaneSQLite.Procedure(async s => {
-            await s.Execute(`select count(id) as cnt from memo`);
-        }, filepath, false);
+        const err = await ObjectConverterAsync.SaveAsync(filepath, new StoryWriterObjectSample());
+        const isErr = err !== null;
 
         // Assert
-        if(err !== null) console.log(err.message);
-        expect(err === null).toEqual(true);
+        if(isErr) console.log(err.message);
+        expect(isErr).toEqual(false);
     });
     it("can load data from DB", async () => {
         // Arrange
-        const conv = new SQLiteConverterAsync();
-        const filepath = "C:\\Temp\\storywriter.sample.db";
         let stories = 0;
+        let dicts = 0;
+        let actors = 0;
+        let chats = 0;
+        let worlds = 0;
+        let memos = 0;
 
         // Act
-        const result = await conv.LoadAsync(filepath);
+        const result = await ObjectConverterAsync.LoadAsync(filepath);
         const isErr = result instanceof Error;
-        if(!isErr) {
-            await PlaneSQLite.Procedure(async s => {
-                const r = await s.Execute("select count(*) as cnt from story");
-                stories = r[0]['cnt'] as number;
-            }, filepath, false);
+        if(result instanceof StoryWriterObject) {
+            stories = result.story.GetFlattenStories().length;
+            dicts = result.dict.dictionaries.length;
+            actors = result.actor.actors.length;
+            chats = result.chat.chats.length;
+            worlds = result.world.GetFlattenWorlds().length;
+            memos = result.memo.memos.length;
         }
 
         // Assert
         if(isErr) console.log((result as Error).message);
-        expect(!isErr && stories === 9).toEqual(true);
+        expect(isErr).toEqual(false);
+        expect(stories === 9).toEqual(true);
+        expect(dicts === 3).toEqual(true);
+        expect(actors === 3).toEqual(true);
+        expect(chats === 2).toEqual(true);
+        expect(worlds === 8).toEqual(true);
+        expect(memos === 2).toEqual(true);
     });
 });

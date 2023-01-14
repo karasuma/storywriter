@@ -7,6 +7,7 @@ import { IpcUtils } from './logics/utils/ipc-utils'
 import { Dialog } from './logics/models/dialogs'
 import path from 'path'
 import fs from 'fs/promises';
+import log from 'electron-log';
 import { existsSync } from 'fs';
 import { Information } from './logics/models/information'
 const isDevelopment = process.env.NODE_ENV !== 'production'
@@ -16,9 +17,18 @@ protocol.registerSchemesAsPrivileged([
   { scheme: 'app', privileges: { secure: true, standard: true } }
 ])
 
+// Unhandled Error handling 
+process.on('uncaughtException', err => {
+  log.error('electron:event:uncaughtException');
+  log.error(err);
+  log.error(err.stack);
+  app.quit();
+});
+
 async function createWindow() {
   // Create the browser window.
   const win = new BrowserWindow({
+    title: "Storywriter",
     width: 1200,
     height: 720,
     minWidth: 800,
