@@ -1,0 +1,38 @@
+@import './global.scss';
+
+$Base-Color: #222;
+$Base-Inv-Color: #fff;
+$Hover-Color: #444;
+$Font-Color: #eee;
+$Header-Color: #141414;
+$Header-Hover-Color: #999;
+$Content-BaseColor: #333;
+$Border-Color: #9ea1a3;
+$Dim-Border-Color: #575a5c;
+$Palette-Width: 60px;
+
+// --- Light Mode ---
+//@media (perfers-color-scheme: light) {
+//    :root {
+//        $Base-Color: #fff;
+//        $Base-Inv-Color: #222;
+//        $Font-Color: #333;
+//        $Header-Color: #eee;
+//        $Header-Hover-Color: #aaa;
+//        $Content-BaseColor: #fff;
+//    }
+//}
+
+// --- Global ---
+$Unhovering-Opacity: 0.5;
+.selectable {
+    opacity: $Unhovering-Opacity;
+    &:hover {
+        opacity: 1;
+        cursor: pointer;
+    }
+}
+
+* {
+    color: $Font-Color;
+}
