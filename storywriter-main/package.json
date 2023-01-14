@@ -1,6 +1,9 @@
 {
   "name": "storywriter",
   "version": "1.2.0",
+  "description": "Storywriter helps to write down awesome stories that you imagining.",
+  "author": "Yakumo Karasuma <yakumo.karasuma@gmail.com>",
+  "license": "MIT license",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
