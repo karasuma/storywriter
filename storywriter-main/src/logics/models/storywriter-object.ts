@@ -66,7 +66,10 @@ export class StoryWriterObject {
         this.setting.IsTitle = false;
 
         // Load settings
-        if(loadDefault) return;
+        if(loadDefault) {
+            this.setting.URI = "";
+            return;
+        }
         const storyIdx = this.information.previousStories.indexOf(this.setting.URI);
         if(storyIdx !== -1) {
             this.information.previousStories.splice(storyIdx, 1);
