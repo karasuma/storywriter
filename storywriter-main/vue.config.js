@@ -14,6 +14,13 @@ module.exports = defineConfig({
                             arch: ['x64', 'ia32']
                         }
                     ]
+                },
+                mac: {
+                    icon: 'src/assets/icon.icns',
+                    category: 'public.app-category.utilities',
+                    target: 'tar.gz',
+                    electronLanguages: ['ja', 'en', 'cn'],
+                    strictVerify: false
                 }
             }
         }
