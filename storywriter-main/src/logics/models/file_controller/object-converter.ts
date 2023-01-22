@@ -65,18 +65,25 @@ export class ObjectConverterAsync {
             readStream.on('end', () => {
                 // From JSON
                 const decompress = Buffer.from(base64, 'base64').toString('utf-8');
-                const dao = JSON.parse(decompress) as ObjectConverterAsync;
-                // Create Storywriter object data
-                const obj = new StoryWriterObject();
-                obj.story = StoryDao.ConvBack(dao.stories);
-                obj.dict = DictionaryDao.ConvBack(dao.dictionaries, dao.resources);
-                obj.actor = ActorDao.ConvBack(dao.actors, dao.resources);
-                obj.chat = ChatDao.ConvBack(dao.chats);
-                obj.world = WorldDao.ConvBack(dao.worlds, dao.resources);
-                obj.memo = MemoDao.ConvBack(dao.memos);
-                resolve(obj);
+                ObjectConverterAsync.LoadFromJsonAsync(decompress)
+                    .then(obj => resolve(obj));
             });
             readStream.on('error', err => resolve(err));
+        });
+    }
+
+    public static async LoadFromJsonAsync(json: string): Promise<StoryWriterObject> {
+        return new Promise<StoryWriterObject>(resolve => {
+            const dao = JSON.parse(json) as ObjectConverterAsync;
+            // Create Storywriter object data
+            const obj = new StoryWriterObject();
+            obj.story = StoryDao.ConvBack(dao.stories);
+            obj.dict = DictionaryDao.ConvBack(dao.dictionaries, dao.resources);
+            obj.actor = ActorDao.ConvBack(dao.actors, dao.resources);
+            obj.chat = ChatDao.ConvBack(dao.chats);
+            obj.world = WorldDao.ConvBack(dao.worlds, dao.resources);
+            obj.memo = MemoDao.ConvBack(dao.memos);
+            resolve(obj);
         });
     }
 }

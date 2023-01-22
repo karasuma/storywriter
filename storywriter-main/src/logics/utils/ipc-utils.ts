@@ -14,7 +14,8 @@ export class IpcUtils {
         Cancel: "cancel",
         SaveClose: "save_close",
         SaveHome: "save_home",
-        HomeData: "home_data"
+        HomeData: "home_data",
+        DefaultStoryPath: "def_file_path"
     } as const;
 
     public static RelayedPrefix = "Relayed::";

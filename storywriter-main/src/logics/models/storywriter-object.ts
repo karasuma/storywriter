@@ -45,7 +45,7 @@ export class StoryWriterObject {
         IpcUtils.Send(IpcUtils.DefinedIpcChannels.HomeData, JSON.stringify(this.information, null, '\t'));
     }
 
-    public async Load(): Promise<void> {
+    public async Load(loadDefault = false): Promise<void> {
         this.message.Send("読み込み中...", Notifier.Levels.Warning);
         const result = await Savedata.Load(this.setting.URI);
         if(result instanceof Error) {
@@ -62,9 +62,11 @@ export class StoryWriterObject {
         this.world = result.world;
         this.memo = result.memo;
 
-        // Load settings
         this.currentView = 1;
         this.setting.IsTitle = false;
+
+        // Load settings
+        if(loadDefault) return;
         const storyIdx = this.information.previousStories.indexOf(this.setting.URI);
         if(storyIdx !== -1) {
             this.information.previousStories.splice(storyIdx, 1);
