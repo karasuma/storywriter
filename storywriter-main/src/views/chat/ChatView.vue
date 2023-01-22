@@ -6,14 +6,17 @@ import { Stories, StoryData } from '@/logics/models/story-data';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { Utils } from '@/logics/models/utils';
 import DragElement from '@/logics/utils/draggable';
+import SystemMessage from '@/logics/utils/SystemMessage';
 import { Options, Vue } from 'vue-class-component';
+import MessageDialog from '../dialogs/MessageDialog.vue';
 import ChatActorView from './ChatActorView.vue';
 import ChatListView from './ChatListView.vue';
 
 @Options({
     components: {
         ChatListView,
-        ChatActorView
+        ChatActorView,
+        MessageDialog
     },
     props: {
         vm: {
@@ -92,6 +95,19 @@ import ChatListView from './ChatListView.vue';
             const rgb = Utils.hex2rgb(s.color);
             return `${basecss} rgba(${rgb.join(",")},0.3);`;
         },
+        deleteClicked(): void {
+            this.message = SystemMessage.Create(
+                "確認",
+                `現在の会話を削除しますか？`,
+                SystemMessage.MessageType.Normal,
+                true
+            );
+        },
+        deleteChat(result: number): void {
+            if(result === SystemMessage.MessageResult.OK) {
+                this.vm.chat.Remove(this.editingChat());
+            }
+        },
         // Drag events
         itemDragStart(id: string, event: DragEvent): void {
             this.drag.DragStart(id, event, (event.target as HTMLElement).parentNode);
@@ -133,6 +149,8 @@ export default class ChatView extends Vue {
     drag = new DragElement(document);
     dragging = false;
 
+    message = new SystemMessage();
+
     public dbgGetStr(id: string): string {
         if(id == DragElement.NoNextElement) return "x";
         const talkidx = this.vm.chat.chats.find(x => x.isEditing)!.timeline.findIndex(x => x.id == id);
@@ -164,6 +182,7 @@ export default class ChatView extends Vue {
 </script>
 
 <template>
+    <MessageDialog :message="message" :result="deleteChat" />
     <div id="Chat">
         <div class="chatlist">
             <ChatListView @selectchanged="selectChanged" :vm="vm" />
@@ -179,6 +198,7 @@ export default class ChatView extends Vue {
                     </option>
                 </select>
                 <input type="text" spellcheck="false" placeholder="説明..." v-model="editingChat().description" />
+                <img class="selectable" src="@/assets/dark/dispose.png" @click="deleteClicked" />
             </div>
 
             <div class="mainchat__chats">
@@ -222,7 +242,7 @@ export default class ChatView extends Vue {
                 </div>
             </div>
         </div>
-        <div class="mainchat__notfound" v-else>
+        <div class="mainchat" v-else>
             <img src="@/assets/dark/chat.png" />
         </div>
     </div>
@@ -297,6 +317,12 @@ export default class ChatView extends Vue {
                 &:focus {
                     border-bottom: solid 1px $Border-Color;
                 }
+            }
+
+            & > img {
+                @include square-size(32px);
+                margin-left: 20px;
+                cursor: pointer;
             }
         }
 
@@ -430,15 +456,12 @@ export default class ChatView extends Vue {
             }
         }
 
-        &__notfound {
+        & > img {
             position: relative;
             bottom: -10px;
             left: -5px;
             @include square-size(50vw);
-            & img {
-                opacity: 0.1;
-                @include square-size(100%);
-            }
+            opacity: 0.1;
         }
     }
 }
