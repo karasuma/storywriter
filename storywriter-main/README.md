@@ -4,22 +4,22 @@
 ## Commands
 ```
 // Prepare
-yarn install
+$> yarn install
 
 // Execute
-yarn electron:serve
+$> yarn electron:serve
 
-// Build
-yarn electron:build
+// Build (windows)
+$> build-action.bat
+
+// Build (any)
+$> yarn electron:build
+$> cp default.ysd ./dist_electron/[any directories]/
 
 // Test
-yarn jest:unit
+$> yarn jest:unit
 // not "t"est:unit
 ```
 
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
-
-### Note
-* better-sqlite3
-  * NODE_MODULE_VERSION error occurrs when use better-sqlite3 but I don't know how to fix it...

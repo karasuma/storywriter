@@ -83,7 +83,7 @@ async function createWindow() {
     return await Dialog.LoadDialog(win);
   })
   IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.DefaultStoryPath, () => {
-    return path.join(path.dirname(path.resolve(".")), "default.ysd");
+    return path.join(path.resolve("."), "default.ysd");
   });
 
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.HomeData, async (_, data) => {
