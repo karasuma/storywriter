@@ -120,6 +120,7 @@ import { Vue, Options } from 'vue-class-component';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 import ColorMessage from '@/logics/utils/color-message';
 import ColorDialog from '../dialogs/ColorDialog.vue';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 
 @Options({
     components: {
@@ -149,9 +150,11 @@ import ColorDialog from '../dialogs/ColorDialog.vue';
                 SystemMessage.MessageType.Normal,
                 true
             );
+            StoryWriterObject.ModalOpen();
         },
         changeColor(): void {
             this.colortrig = ColorMessage.Show(ColorMessage.Type.Dark);
+            StoryWriterObject.ModalOpen();
         },
         msgResult(result: number): void {
             if(result == SystemMessage.MessageResult.OK) {

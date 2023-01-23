@@ -104,6 +104,7 @@ import { IStringResult } from '@/logics/utils/interfaces';
 import { PropType } from 'vue';
 import { Vue, Options } from 'vue-class-component';
 import ColorMessage from '@/logics/utils/color-message';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 
 @Options({
     props: {
@@ -122,10 +123,12 @@ import ColorMessage from '@/logics/utils/color-message';
         },
         reject(): void {
             this.showTrigger.visible = false;
+            StoryWriterObject.ModalOpen(false);
         },
         colorClick(col: string): void {
             this.result(col);
             this.showTrigger.visible = false;
+            StoryWriterObject.ModalOpen(false);
         }
     },
     computed: {

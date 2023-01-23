@@ -46,6 +46,7 @@ import DictionaryWordView from './DictionaryWordView.vue';
                 `${currDict.caption} を削除しますか？`,
                 SystemMessage.MessageType.Normal,
                 true);
+            StoryWriterObject.ModalOpen();
         }
     }
 })

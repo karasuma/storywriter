@@ -15,7 +15,8 @@ export class IpcUtils {
         SaveClose: "save_close",
         SaveHome: "save_home",
         HomeData: "home_data",
-        DefaultStoryPath: "def_file_path"
+        DefaultStoryPath: "def_file_path",
+        ModalOpen: "modal_open"
     } as const;
 
     public static RelayedPrefix = "Relayed::";
@@ -54,7 +55,6 @@ export class IpcUtils {
         ipcMain.handle(channel, (e, a) => {
             if(action !== undefined) {
                 const resultArgs = action(e, a);
-                console.log(resultArgs);
                 e.sender.send(IpcUtils.GenRelayedChannel(channel), resultArgs);
                 return;
             }

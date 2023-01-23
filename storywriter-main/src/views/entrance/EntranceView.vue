@@ -37,6 +37,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
                     SystemMessage.MessageType.Alert,
                     true
                 );
+                StoryWriterObject.ModalOpen();
                 return;
             }
             this.vm.setting.URI = path;

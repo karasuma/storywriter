@@ -157,6 +157,7 @@ import { Stories } from "@/logics/models/story-data";
 import InputDialog from "../dialogs/InputDialog.vue";
 import InputMessage from "@/logics/utils/input-message";
 import { Enumerable, Utils } from "@/logics/models/utils";
+import { StoryWriterObject } from "@/logics/models/storywriter-object";
 
 @Options({
     components: {
@@ -198,6 +199,7 @@ import { Enumerable, Utils } from "@/logics/models/utils";
         createDialog(isDir: boolean): void {
             this.isDir = isDir;
             this.inputdlg = InputMessage.Create(`${isDir ? "章" : "お話"}の追加`);
+            StoryWriterObject.ModalOpen();
         },
         toggleExpand(): void {
             this.$emit('refreshItems', this.story);

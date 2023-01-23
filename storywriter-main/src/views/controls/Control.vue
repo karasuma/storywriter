@@ -118,6 +118,7 @@ import { StoryWriterObject } from '@/logics/models/storywriter-object';
             }
             this.isClose = true;
             this.message = SystemMessage.Create("確認", "セーブして終了しますか？", SystemMessage.MessageType.Normal);
+            StoryWriterObject.ModalOpen();
         },
         minimize: function() {
             IpcUtils.Send(IpcUtils.DefinedIpcChannels.Minimize);
@@ -157,6 +158,7 @@ import { StoryWriterObject } from '@/logics/models/storywriter-object';
                 "セーブしてホームへ戻りますか？", 
                 SystemMessage.MessageType.Normal
             );
+            StoryWriterObject.ModalOpen();
         }
     },
     computed: {
