@@ -105,6 +105,7 @@ async function createWindow() {
 
   // Edit views -> Dialogs
   IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.KernelPanic)
+  IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.ModalOpen, (_, flag) => (flag as boolean[])[0]);
 }
 
 // Quit when all windows are closed.

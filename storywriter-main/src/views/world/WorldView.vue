@@ -61,6 +61,7 @@ import WorldHierarchyView from './WorldHierarchyView.vue';
                 SystemMessage.MessageType.Normal,
                 true
             );
+            StoryWriterObject.ModalOpen();
         },
         deleteWorld(result: number): void {
             if(result === SystemMessage.MessageResult.OK) {

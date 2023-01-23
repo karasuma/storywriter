@@ -71,6 +71,7 @@ import ActorListView from './ActorListView.vue';
             data.SwapDetail(data.details[didx], data.details[didx - 1]);
         },
         deleteConfirmClicked(): void {
+            StoryWriterObject.ModalOpen();
             this.systemMessage = SystemMessage.Create(
                 "キャラクターの削除",
                 `${this.editingActor().name} を除名しますか？`,

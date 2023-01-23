@@ -27,6 +27,10 @@ export class StoryWriterObject {
 
     public currentView = 1;
 
+    public static ModalOpen(flag = true): void {
+        IpcUtils.Send(IpcUtils.DefinedIpcChannels.ModalOpen, flag);
+    }
+
     public async Save(): Promise<void> {
         this.message.Send("保存中...", Notifier.Levels.Warning);
         const result = await Savedata.Save(this.setting.URI, this);

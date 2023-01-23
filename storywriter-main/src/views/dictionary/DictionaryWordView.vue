@@ -97,6 +97,7 @@
 
 <script lang="ts">
 import { Dictionaries, DictionaryContent } from '@/logics/models/dictionary-data';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import InputMessage from '@/logics/utils/input-message';
 import { Vue, Options } from 'vue-class-component';
 import InputDialog from '../dialogs/InputDialog.vue';
@@ -124,6 +125,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
         },
         addDictClicked(): void {
             this.inputmsg = InputMessage.Create("新しい用語の追加");
+            StoryWriterObject.ModalOpen();
         },
         addDict(caption: string): void {
             this.dict.Add(caption);

@@ -96,6 +96,7 @@ import ChatListView from './ChatListView.vue';
             return `${basecss} rgba(${rgb.join(",")},0.3);`;
         },
         deleteClicked(): void {
+            StoryWriterObject.ModalOpen();
             this.message = SystemMessage.Create(
                 "確認",
                 `現在の会話を削除しますか？`,

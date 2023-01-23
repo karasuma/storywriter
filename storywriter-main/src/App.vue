@@ -145,9 +145,11 @@ import { IpcUtils } from './logics/utils/ipc-utils';
       return this.vm.currentView == view;
     },
     saveCalled(): void {
+      if(!this.CanSave()) return;
       IpcUtils.Send(IpcUtils.DefinedIpcChannels.Save, this.vm.setting.URI);
     },
     loadCalled(): void {
+      if(this.vm.setting.IsModalOpen) return;
       IpcUtils.Send(IpcUtils.DefinedIpcChannels.Load);
     },
     footerMessage(): string {
@@ -163,6 +165,17 @@ import { IpcUtils } from './logics/utils/ipc-utils';
 export default class App extends Vue {
   vm = new StoryWriterObjectSample();
 
+  public CanSave(): boolean {
+    return !(this.vm.setting.IsTitle || this.vm.setting.IsModalOpen || this.vm.setting.IsSettingVisible);
+  }
+
+  public SaveCommand(e: KeyboardEvent): void {
+    if((e.ctrlKey || e.metaKey) && e.key === 's') {
+      if(!this.CanSave()) return;
+      IpcUtils.Send(IpcUtils.DefinedIpcChannels.Save, this.vm.setting.URI);
+    }
+  }
+
   mounted(): void {
     IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.Save, async (_, result) => {
       if((result as string) === IpcUtils.DefinedIpcChannels.Cancel) return;
@@ -175,6 +188,15 @@ export default class App extends Vue {
       this.vm.setting.URI = result as string;
       await this.vm.Load();
     });
+
+    IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.ModalOpen, async (_, flag) => {
+      this.vm.setting.IsModalOpen = flag as boolean;
+    });
+
+    document.addEventListener('keydown', this.SaveCommand);
+  }
+  beforeDestroy(): void {
+    document.removeEventListener('keydown', this.SaveCommand);
   }
 }
 

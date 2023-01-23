@@ -86,10 +86,12 @@ import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
         makeStory(): void {
             this.createDir = false;
             this.inputmsg = InputMessage.Create("ストーリーの追加");
+            StoryWriterObject.ModalOpen();
         },
         makeDirectory(): void {
             this.createDir = true;
             this.inputmsg = InputMessage.Create("グループの追加");
+            StoryWriterObject.ModalOpen();
         },
 
         dragStart(id: string, event: DragEvent): void {

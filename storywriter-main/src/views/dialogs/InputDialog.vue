@@ -105,6 +105,7 @@
 </style>
 
 <script lang="ts">
+import { StoryWriterObject } from "@/logics/models/storywriter-object";
 import InputMessage from "@/logics/utils/input-message";
 import { IStringResult } from "@/logics/utils/interfaces";
 import { PropType } from 'vue';
@@ -127,10 +128,12 @@ import { Vue, Options } from "vue-class-component";
             this.result(this.inputMessage.defaultText);
             this.inputMessage.defaultText = "";
             this.inputMessage.visible = false;
+            StoryWriterObject.ModalOpen(false);
         },
         Cancel(): void {
             this.inputMessage.defaultText = "";
             this.inputMessage.visible = false;
+            StoryWriterObject.ModalOpen(false);
         },
         showConfirm(): boolean {
             return this.inputMessage.defaultText.length > 0;

@@ -49,6 +49,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
                 SystemMessage.MessageType.Normal,
                 true
             );
+            StoryWriterObject.ModalOpen();
         },
         colorResult(color: string): void {
             const memoIdx = this.vm.memo.memos.findIndex((x: MemoItem) => x.id === this.currentMemoId);
@@ -57,6 +58,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
         colorClicked(memo: MemoItem): void {
             this.currentMemoId = memo.id;
             this.color = ColorMessage.Show(ColorMessage.Type.Dark);
+            StoryWriterObject.ModalOpen();
         },
         addMemo(): void {
             this.vm.memo.Add();

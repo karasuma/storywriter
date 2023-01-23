@@ -1,4 +1,5 @@
 <script lang="ts">
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { Enumerable, Utils } from '@/logics/models/utils';
 import { WorldData, Worlds } from '@/logics/models/world-data';
 import DragElement from '@/logics/utils/draggable';
@@ -27,6 +28,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
             this.inputIsDir = isDir;
             this.inputString = "";
             this.inputdlg = InputMessage.Create(`${isDir ? "エリア" : "場所"}の追加`);
+            StoryWriterObject.ModalOpen();
         },
         appendItem(result: string): void {
             this.vm.AddWorldData(result, this.inputIsDir, this.addTarget);
