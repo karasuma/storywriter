@@ -1,8 +1,12 @@
 <script lang="ts">
 import { WorldDescription } from '@/logics/models/world-data';
 import { Vue, Options } from 'vue-class-component';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 
 @Options({
+    components: {
+        AutoResizeTextarea
+    },
     props: {
         detail: {
             type: WorldDescription,
@@ -19,7 +23,8 @@ export default class WorldDetailView extends Vue {
 <template>
     <div class="details">
         <input type="text" spellcheck="false" placeholder="..." v-model="detail.title" />
-        <textarea spellcheck="false" v-model="detail.text"></textarea>
+        <!-- <textarea spellcheck="false" v-model="detail.text"></textarea> -->
+        <AutoResizeTextarea :value="detail.text" @input="detail.text = $event" />
     </div>
 </template>
 

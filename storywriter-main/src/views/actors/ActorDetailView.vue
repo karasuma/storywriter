@@ -1,8 +1,12 @@
 <script lang="ts">
 import { ActorDetail } from '@/logics/models/actor-data';
 import { Vue, Options } from 'vue-class-component';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 
 @Options({
+    components: {
+        AutoResizeTextarea
+    },
     props: {
         detail: {
             type: ActorDetail,
@@ -19,7 +23,7 @@ export default class ActorDetailView extends Vue {
 <template>
     <div class="actorDetail">
         <input type="text" spellcheck="false" placeholder="..." v-model="detail.title" />
-        <textarea spellcheck="false" placeholder="..." v-model="detail.description"></textarea>
+        <AutoResizeTextarea :value="detail.description" @input="detail.description = $event" />
     </div>
 </template>
 
