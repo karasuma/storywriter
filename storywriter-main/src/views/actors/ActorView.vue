@@ -8,6 +8,7 @@ import DragElement from '@/logics/utils/draggable';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Options, Vue } from 'vue-class-component';
 import ResourceBox from '../commons/ResourceBox.vue';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 import ActorDetailView from './ActorDetailView.vue';
 import ActorListView from './ActorListView.vue';
@@ -17,7 +18,8 @@ import ActorListView from './ActorListView.vue';
         ActorListView,
         ResourceBox,
         MessageDialog,
-        ActorDetailView
+        ActorDetailView,
+        AutoResizeTextarea
     },
     props: {
         vm: {
@@ -175,9 +177,14 @@ export default class ActorView extends Vue {
                 
                 <div class="actorView__detail__details">
                     <p class="actorView__detail__details-title">紹介</p>
-                    <textarea spellcheck="false" placeholder="..." v-model="editingActor().description"
+                    <!--<textarea spellcheck="false" placeholder="..." v-model="editingActor().description"
                               class="actorView__detail__details-desc">
-                    </textarea>
+                    </textarea>-->
+                    <AutoResizeTextarea
+                        :value="editingActor().description"
+                        @input="editingActor().description = $event"
+                        :minHeight="130"
+                    />
                     <div class="actorView__detail__details-item"
                          v-for="d in editingActor().details" :id="d.id" :key="d.id"
                          @dragover="itemDragOver(d.id, $event)"
