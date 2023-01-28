@@ -158,6 +158,7 @@ export default class DictionaryView extends Vue {
                 & img {
                     @include square-size(32px);
                     margin: 0 8px;
+                    user-select: none;
                 }
 
                 & input {
@@ -176,6 +177,7 @@ export default class DictionaryView extends Vue {
                 font-weight: bold;
                 font-size: 21px;
                 margin-top: 30px;
+                user-select: none;
             }
 
             &__resources {

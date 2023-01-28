@@ -76,6 +76,9 @@
             &__inputarea {
                 display: flex;
                 justify-content: flex-end;
+                & > img {
+                    user-select: none;
+                }
                 & input {
                     width: 250px;
                 }
@@ -87,6 +90,7 @@
             & p {
                 margin: 8px 16px;
                 font-size: 14px;
+                user-select: none;
             }
         }
 
@@ -116,12 +120,14 @@
                     & > img {
                         @include square-size(1.5em);
                         margin: 0 4px;
+                        user-select: none;
                     }
                     & > p {
                         line-height: 2em;
                         font-size: 14px;
                         margin-left: 6px;
                         @include hide-overflow-text;
+                        user-select: none;
                     }
                 }
             }

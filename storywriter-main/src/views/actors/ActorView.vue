@@ -258,6 +258,7 @@ export default class ActorView extends Vue {
             right: 30px;
             top: 30px;
             @include square-size(32px);
+            user-select: none;
         }
         &__header {
             display: flex;
@@ -331,6 +332,7 @@ export default class ActorView extends Vue {
                         @include square-size(21px);
                         & img {
                             @include square-size(21px);
+                            user-select: none;
                         }
                     }
 
@@ -370,6 +372,7 @@ export default class ActorView extends Vue {
                     align-items: flex-start;
                     & img {
                         @include square-size(32px);
+                        user-select: none;
                     }
                 }
             }

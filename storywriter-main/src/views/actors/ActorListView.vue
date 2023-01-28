@@ -100,6 +100,7 @@ export default class ActorListView extends Vue {
         & img {
             @include square-size(21px);
             margin: 0 8px;
+            user-select: none;
         }
         & input {
             width: calc(100% - 48px);
@@ -148,6 +149,7 @@ export default class ActorListView extends Vue {
         &__image {
             margin: 21px 0;
             @include square-size(31px);
+            user-select: none;
         }
     }
 }
