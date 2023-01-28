@@ -180,6 +180,7 @@ export default class EntranceView extends Vue {
 
             & > img {
                 @include square-size(32px);
+                user-select: none;
             }
             & > p {
                 font-size: 1em;

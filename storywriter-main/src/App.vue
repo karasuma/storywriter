@@ -99,6 +99,7 @@ body {
     & > p {
       margin: 0 6px;
       font-size: 0.85em;
+      user-select: none;
     }
   }
 }
