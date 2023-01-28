@@ -87,7 +87,7 @@ async function createWindow() {
   });
 
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.HomeData, async (_, data) => {
-    const settingFile = path.join(app.getPath('userData'), "home.json");
+    const settingFile = path.join(path.resolve("."), "home.json");
     const json = data as string;
     if(json.length === 0) {
       // Load
