@@ -82,9 +82,12 @@ async function createWindow() {
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.Load, async () => {
     return await Dialog.LoadDialog(win);
   })
+  IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.DefaultStoryPath, () => {
+    return path.join(path.resolve("."), "default.ysd");
+  });
 
   IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.HomeData, async (_, data) => {
-    const settingFile = path.join(app.getPath('userData'), "home.json");
+    const settingFile = path.join(path.resolve("."), "home.json");
     const json = data as string;
     if(json.length === 0) {
       // Load
@@ -102,6 +105,7 @@ async function createWindow() {
 
   // Edit views -> Dialogs
   IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.KernelPanic)
+  IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.ModalOpen, (_, flag) => (flag as boolean[])[0]);
 }
 
 // Quit when all windows are closed.

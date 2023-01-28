@@ -125,6 +125,7 @@ import { Options, Vue } from 'vue-class-component';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { INumberResult } from '@/logics/utils/interfaces';
 import { PropType } from 'vue';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 
 @Options({
     props: {
@@ -140,17 +141,20 @@ import { PropType } from 'vue';
     methods: {
         Confirm(): void {
             this.result(SystemMessage.MessageResult.OK);
+            StoryWriterObject.ModalOpen(false);
             this.message.visible = false;
         },
         Reject(): void {
             if(this.showNo()) {
                 this.result(SystemMessage.MessageResult.No);
+                StoryWriterObject.ModalOpen(false);
                 this.message.visible = false;
             }
         },
         Cancel(): void {
             if(this.showCancel()) {
                 this.result(SystemMessage.MessageResult.Cancel);
+                StoryWriterObject.ModalOpen(false);
                 this.message.visible = false;
             }
         },

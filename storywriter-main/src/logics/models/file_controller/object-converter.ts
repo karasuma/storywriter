@@ -65,18 +65,25 @@ export class ObjectConverterAsync {
             readStream.on('end', () => {
                 // From JSON
                 const decompress = Buffer.from(base64, 'base64').toString('utf-8');
-                const dao = JSON.parse(decompress) as ObjectConverterAsync;
-                // Create Storywriter object data
-                const obj = new StoryWriterObject();
-                obj.story = StoryDao.ConvBack(dao.stories);
-                obj.dict = DictionaryDao.ConvBack(dao.dictionaries, dao.resources);
-                obj.actor = ActorDao.ConvBack(dao.actors, dao.resources);
-                obj.chat = ChatDao.ConvBack(dao.chats);
-                obj.world = WorldDao.ConvBack(dao.worlds, dao.resources);
-                obj.memo = MemoDao.ConvBack(dao.memos);
-                resolve(obj);
+                ObjectConverterAsync.LoadFromJsonAsync(decompress)
+                    .then(obj => resolve(obj));
             });
             readStream.on('error', err => resolve(err));
+        });
+    }
+
+    public static async LoadFromJsonAsync(json: string): Promise<StoryWriterObject> {
+        return new Promise<StoryWriterObject>(resolve => {
+            const dao = JSON.parse(json) as ObjectConverterAsync;
+            // Create Storywriter object data
+            const obj = new StoryWriterObject();
+            obj.story = StoryDao.ConvBack(dao.stories);
+            obj.dict = DictionaryDao.ConvBack(dao.dictionaries, dao.resources);
+            obj.actor = ActorDao.ConvBack(dao.actors, dao.resources);
+            obj.chat = ChatDao.ConvBack(dao.chats);
+            obj.world = WorldDao.ConvBack(dao.worlds, dao.resources);
+            obj.memo = MemoDao.ConvBack(dao.memos);
+            resolve(obj);
         });
     }
 }
@@ -213,6 +220,7 @@ class StoryDao {
         // Make story hierarchy and return
         let currDepth = 0;
         flatten
+            .sort((l, r) => l[0].content.time < r[0].content.time ? 1 : -1)
             .sort((l, r) => l[0].depth > r[0].depth ? 1 : -1)
             .forEach(pair => {
                 const story = pair[0];
@@ -421,13 +429,14 @@ class WorldDao {
     public isExpanding: number;
     public parentId: string;
     public depth: number;
+    public index: number;
     public caption: string;
     public thumbId: string;
     public desc: WorldDescDao[] = [];
     public resources: string[] = [];
     constructor(
         id: string, editing: boolean, isdir: boolean, expand: boolean,
-        pid: string, depth: number, caption: string, tid: string
+        pid: string, depth: number, index: number, caption: string, tid: string
     ) {
         this.id = id;
         this.editing = editing ? 1 : 0;
@@ -435,6 +444,7 @@ class WorldDao {
         this.isExpanding = expand ? 1 : 0;
         this.parentId = pid;
         this.depth = depth;
+        this.index = index;
         this.caption = caption;
         this.thumbId = tid;
     }
@@ -442,7 +452,7 @@ class WorldDao {
         return obj.GetFlattenWorlds().map(world => {
             const dao = new WorldDao(
                 world.id, world.isEditing, world.isDir, world.isExpanding,
-                world.parent.id, world.depth, world.caption, world.image.id
+                world.parent.id, world.depth, world.index, world.caption, world.image.id
             );
             world.descriptions.forEach(d => dao.desc.push(WorldDescDao.Conv(d)));
             world.resources.forEach(r => dao.resources.push(r.id));
@@ -458,6 +468,7 @@ class WorldDao {
             world.isDir = dao.isDir === 1;
             world.isExpanding = dao.isExpanding === 1;
             world.depth = dao.depth;
+            world.index = dao.index;
             world.caption = dao.caption;
             dao.desc.forEach(d => world.descriptions.push(WorldDescDao.ConvBack(d)));
             const thumb = resources.find(r => r.id === dao.thumbId);
@@ -476,6 +487,7 @@ class WorldDao {
         // Make hierarchy
         let currDepth = 0;
         flatten
+            .sort((l, r) => l.index < r.index ? 1 : -1)
             .sort((l, r) => l.depth > r.depth ? 1 : -1)
             .forEach(world => {
                 if(currDepth !== world.depth) {

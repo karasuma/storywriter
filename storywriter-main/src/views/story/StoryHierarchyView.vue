@@ -1,7 +1,9 @@
 <template>
     <InputDialog :result="inputResult" :inputMessage="inputmsg" />
     <div id="StoryHierarchy">
-        <div v-for="story in editableStories()" :key="story" :id="story.id" class="hierarchy-items">
+        <div v-for="story in editableStories()" :key="story" :id="story.id"
+             class="hierarchy-items"
+             :style="story.isDir ? 'margin-top: 0.6em;' : ''">
             <StoryHierarchyItemView :story="story"
                 @ondragstart="dragStart"
                 @ondragover="dragOver"
@@ -35,6 +37,8 @@
     }
 
     & .hierarchy-ctrl {
+        border-top: solid 1px $Dim-Border-Color;
+        padding-top: 8px;
         margin: 8px 0;
         display: flex;
         justify-content: center;
@@ -82,10 +86,12 @@ import StoryHierarchyItemView from './StoryHierarchyItemView.vue';
         makeStory(): void {
             this.createDir = false;
             this.inputmsg = InputMessage.Create("ストーリーの追加");
+            StoryWriterObject.ModalOpen();
         },
         makeDirectory(): void {
             this.createDir = true;
             this.inputmsg = InputMessage.Create("グループの追加");
+            StoryWriterObject.ModalOpen();
         },
 
         dragStart(id: string, event: DragEvent): void {

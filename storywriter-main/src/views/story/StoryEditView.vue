@@ -101,6 +101,7 @@
 
 <script lang="ts">
 import { StoryContent, StoryData, StoryItem } from '@/logics/models/story-data';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import ColorMessage from '@/logics/utils/color-message';
 import DragElement from '@/logics/utils/draggable';
 import SystemMessage from '@/logics/utils/SystemMessage';
@@ -149,9 +150,11 @@ import StoryEditSectionView from './StoryEditSectionView.vue';
                 SystemMessage.MessageType.Normal,
                 true
             );
+            StoryWriterObject.ModalOpen();
         },
         changeColor(): void {
             this.colortrig = ColorMessage.Show(ColorMessage.Type.Light);
+            StoryWriterObject.ModalOpen();
         },
         // Drag events
         itemDragStart(id: string, event: DragEvent): void {

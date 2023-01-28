@@ -87,6 +87,7 @@ $Border-Alert-Color: #833;
 </style>
 
 <script lang="ts">
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { IpcUtils } from '@/logics/utils/ipc-utils'
 import { Options, Vue } from 'vue-class-component'
 
@@ -109,6 +110,7 @@ export default class KernelPanic extends Vue {
             this.title = params[0];
             this.message = params[1];
             this.isVisible = true;
+            StoryWriterObject.ModalOpen(false);
         })
     }
 }

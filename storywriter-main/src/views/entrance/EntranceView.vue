@@ -25,8 +25,8 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
         loadClicked(): void {
             IpcUtils.Send(IpcUtils.DefinedIpcChannels.Load);
         },
-        newoneClicked(): void {
-            this.vm.setting.IsTitle = false;
+        async newoneClicked(): Promise<void> {
+            IpcUtils.Send(IpcUtils.DefinedIpcChannels.DefaultStoryPath);
         },
         async openFile(path: string): Promise<void> {
             if(!fs.existsSync(path)) {
@@ -37,6 +37,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
                     SystemMessage.MessageType.Alert,
                     true
                 );
+                StoryWriterObject.ModalOpen();
                 return;
             }
             this.vm.setting.URI = path;
@@ -72,6 +73,11 @@ export default class EntranceView extends Vue {
             info.previousStories.forEach(s => this.vm.information.previousStories.push(s));
         });
         IpcUtils.Send(IpcUtils.DefinedIpcChannels.HomeData);
+
+        IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.DefaultStoryPath, async (_, arg) => {
+            this.vm.setting.URI = arg as string;
+            await this.vm.Load(true);
+        })
     }
 }
 </script>
@@ -174,6 +180,7 @@ export default class EntranceView extends Vue {
 
             & > img {
                 @include square-size(32px);
+                user-select: none;
             }
             & > p {
                 font-size: 1em;

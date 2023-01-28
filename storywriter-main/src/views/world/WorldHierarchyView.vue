@@ -1,4 +1,5 @@
 <script lang="ts">
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { Enumerable, Utils } from '@/logics/models/utils';
 import { WorldData, Worlds } from '@/logics/models/world-data';
 import DragElement from '@/logics/utils/draggable';
@@ -27,6 +28,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
             this.inputIsDir = isDir;
             this.inputString = "";
             this.inputdlg = InputMessage.Create(`${isDir ? "エリア" : "場所"}の追加`);
+            StoryWriterObject.ModalOpen();
         },
         appendItem(result: string): void {
             this.vm.AddWorldData(result, this.inputIsDir, this.addTarget);
@@ -141,7 +143,8 @@ export default class WorldHierarchyView extends Vue {
 <template>
     <InputDialog :result="appendItem" :inputMessage="inputdlg" />
     <div class="items">
-        <div class="area" v-for="w in visibleWorlds" :key="w.id" :id="w.id"
+        <div class="area" :style="w.isDir ? 'margin-top: 0.2em;' : ''"
+             v-for="w in visibleWorlds" :key="w.id" :id="w.id"
                          @dragover="itemDragOver(w.id, $event)"
                          @dragleave="itemDragLeave(w.id)"
                          @drop="itemOnDrop(w.id, $event)">
@@ -219,7 +222,6 @@ export default class WorldHierarchyView extends Vue {
                 }
                 & > p {
                     margin-left: 6px;
-                    height: 100%;
                     font-size: 1.2em;
                     cursor: pointer;
                     &:hover {
@@ -241,8 +243,9 @@ export default class WorldHierarchyView extends Vue {
         }
 
         &__item {
+            align-self: center;
             & > p {
-                height: 100%;
+                align-self: center;
                 cursor: pointer;
                 &:hover {
                     opacity: 0.6;
@@ -252,6 +255,8 @@ export default class WorldHierarchyView extends Vue {
 
         &__add {
             width: 100%;
+            padding-top: 8px;
+            border-top: solid 1px $Dim-Border-Color;
             margin: 16px 0;
             display: flex;
             justify-content: center;

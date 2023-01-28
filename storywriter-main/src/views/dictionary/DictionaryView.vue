@@ -6,6 +6,7 @@ import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Vue, Options } from 'vue-class-component';
 import ResourceBox from '../commons/ResourceBox.vue';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 import DictionaryWordView from './DictionaryWordView.vue';
 
@@ -13,7 +14,8 @@ import DictionaryWordView from './DictionaryWordView.vue';
     components: {
         DictionaryWordView,
         ResourceBox,
-        MessageDialog
+        MessageDialog,
+        AutoResizeTextarea
     },
     props: {
         vm: {
@@ -46,6 +48,7 @@ import DictionaryWordView from './DictionaryWordView.vue';
                 `${currDict.caption} を削除しますか？`,
                 SystemMessage.MessageType.Normal,
                 true);
+            StoryWriterObject.ModalOpen();
         }
     }
 })
@@ -71,7 +74,11 @@ export default class DictionaryView extends Vue {
                     <img class="selectable" src="@/assets/dark/dispose.png" @click="deleteClicked()" />
                 </div>
 
-                <textarea placeholder="..." spellcheck="false" v-model="editingDict().description"></textarea>
+                <AutoResizeTextarea
+                    :value="editingDict().description"
+                    @input="editingDict().description = $event"
+                    :minHeight="160"
+                />
 
                 <h2 class="page__inner__resheader">参考資料</h2>
                 <div class="page__inner__resources">
@@ -151,6 +158,7 @@ export default class DictionaryView extends Vue {
                 & img {
                     @include square-size(32px);
                     margin: 0 8px;
+                    user-select: none;
                 }
 
                 & input {
@@ -169,6 +177,7 @@ export default class DictionaryView extends Vue {
                 font-weight: bold;
                 font-size: 21px;
                 margin-top: 30px;
+                user-select: none;
             }
 
             &__resources {

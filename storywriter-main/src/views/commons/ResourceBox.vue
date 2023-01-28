@@ -232,6 +232,7 @@ export default class ResourceBox extends Vue {
 
         &__main {
             margin: 8px;
+            user-select: none;
         }
         &__desc {
             height: auto;
@@ -240,6 +241,7 @@ export default class ResourceBox extends Vue {
             text-align: center;
             @include hide-overflow-text;
             font-size: 12px;
+            user-select: none;
         }
     }
 }

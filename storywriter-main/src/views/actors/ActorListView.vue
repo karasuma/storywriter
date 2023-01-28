@@ -2,6 +2,7 @@
 import { ActorData, Actors } from '@/logics/models/actor-data';
 import { Defs } from '@/logics/models/defs';
 import { ItemResource } from '@/logics/models/resource';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import InputMessage from '@/logics/utils/input-message';
 import { Vue, Options } from 'vue-class-component';
 import InputDialog from '../dialogs/InputDialog.vue';
@@ -28,6 +29,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
             actor.isEditing = true;
         },
         addActorClicked(): void {
+            StoryWriterObject.ModalOpen();
             this.inputmsg = InputMessage.Create("キャラクターの追加");
         },
         isImage(res: ItemResource): boolean {
@@ -98,6 +100,7 @@ export default class ActorListView extends Vue {
         & img {
             @include square-size(21px);
             margin: 0 8px;
+            user-select: none;
         }
         & input {
             width: calc(100% - 48px);
@@ -146,6 +149,7 @@ export default class ActorListView extends Vue {
         &__image {
             margin: 21px 0;
             @include square-size(31px);
+            user-select: none;
         }
     }
 }

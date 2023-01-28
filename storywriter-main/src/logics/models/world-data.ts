@@ -15,7 +15,9 @@ export class Worlds implements IUniqueObject {
 
     public MakeFlattenWorlds(): void {
         this.flattenWorlds.splice(0);
+        let index = 0;
         this.area.children.forEach(x => {
+            x.index = index++;
             this.flattenWorlds.push(x);
             this.flattenWorlds = this.flattenWorlds.concat(this.MakeFlattenChildren(x.children));
         });
@@ -67,6 +69,7 @@ export class WorldData implements IUniqueObject {
     public children = new Array<WorldData>();
     public parent: WorldData;
     public depth = 0;
+    public index = 0;
     public root: Worlds;
 
     public caption = "";

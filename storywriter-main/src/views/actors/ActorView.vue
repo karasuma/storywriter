@@ -8,6 +8,7 @@ import DragElement from '@/logics/utils/draggable';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Options, Vue } from 'vue-class-component';
 import ResourceBox from '../commons/ResourceBox.vue';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 import ActorDetailView from './ActorDetailView.vue';
 import ActorListView from './ActorListView.vue';
@@ -17,7 +18,8 @@ import ActorListView from './ActorListView.vue';
         ActorListView,
         ResourceBox,
         MessageDialog,
-        ActorDetailView
+        ActorDetailView,
+        AutoResizeTextarea
     },
     props: {
         vm: {
@@ -71,6 +73,7 @@ import ActorListView from './ActorListView.vue';
             data.SwapDetail(data.details[didx], data.details[didx - 1]);
         },
         deleteConfirmClicked(): void {
+            StoryWriterObject.ModalOpen();
             this.systemMessage = SystemMessage.Create(
                 "キャラクターの削除",
                 `${this.editingActor().name} を除名しますか？`,
@@ -174,9 +177,14 @@ export default class ActorView extends Vue {
                 
                 <div class="actorView__detail__details">
                     <p class="actorView__detail__details-title">紹介</p>
-                    <textarea spellcheck="false" placeholder="..." v-model="editingActor().description"
+                    <!--<textarea spellcheck="false" placeholder="..." v-model="editingActor().description"
                               class="actorView__detail__details-desc">
-                    </textarea>
+                    </textarea>-->
+                    <AutoResizeTextarea
+                        :value="editingActor().description"
+                        @input="editingActor().description = $event"
+                        :minHeight="130"
+                    />
                     <div class="actorView__detail__details-item"
                          v-for="d in editingActor().details" :id="d.id" :key="d.id"
                          @dragover="itemDragOver(d.id, $event)"
@@ -250,6 +258,7 @@ export default class ActorView extends Vue {
             right: 30px;
             top: 30px;
             @include square-size(32px);
+            user-select: none;
         }
         &__header {
             display: flex;
@@ -323,6 +332,7 @@ export default class ActorView extends Vue {
                         @include square-size(21px);
                         & img {
                             @include square-size(21px);
+                            user-select: none;
                         }
                     }
 
@@ -362,6 +372,7 @@ export default class ActorView extends Vue {
                     align-items: flex-start;
                     & img {
                         @include square-size(32px);
+                        user-select: none;
                     }
                 }
             }

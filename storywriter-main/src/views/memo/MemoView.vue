@@ -9,6 +9,7 @@ import Notifier from '@/logics/utils/notifier';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Vue, Options } from 'vue-class-component';
 import ColorPalette from '../commons/ColorPalette.vue';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 import ColorDialog from '../dialogs/ColorDialog.vue';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 
@@ -16,7 +17,8 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
     components: {
         ColorPalette,
         MessageDialog,
-        ColorDialog
+        ColorDialog,
+        AutoResizeTextarea
     },
     props: {
         vm: {
@@ -49,6 +51,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
                 SystemMessage.MessageType.Normal,
                 true
             );
+            StoryWriterObject.ModalOpen();
         },
         colorResult(color: string): void {
             const memoIdx = this.vm.memo.memos.findIndex((x: MemoItem) => x.id === this.currentMemoId);
@@ -57,6 +60,7 @@ import MessageDialog from '../dialogs/MessageDialog.vue';
         colorClicked(memo: MemoItem): void {
             this.currentMemoId = memo.id;
             this.color = ColorMessage.Show(ColorMessage.Type.Dark);
+            StoryWriterObject.ModalOpen();
         },
         addMemo(): void {
             this.vm.memo.Add();
@@ -163,7 +167,8 @@ export default class MemoView extends Vue {
                             <input v-model="memo.caption" type="text" spellcheck="false" placeholder="..." />
                         </span>
                         <hr/>
-                        <textarea v-model="memo.text" spellcheck="false" placeholder="..."></textarea>
+                        <!--<textarea v-model="memo.text" spellcheck="false" placeholder="..."></textarea>-->
+                        <AutoResizeTextarea :value="memo.text" @input="memo.text = $event" />
                     </div>
                 </div>
                 <img class="selectable" src="@/assets/dark/add.png" @click="addMemo" />

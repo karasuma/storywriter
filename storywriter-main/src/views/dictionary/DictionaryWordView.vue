@@ -39,6 +39,7 @@
         & img {
             @include square-size(21px);
             margin: 0 8px;
+            user-select: none;
         }
         & input {
             width: calc(100% - 48px);
@@ -90,6 +91,7 @@
         &__image {
             margin: 21px 0;
             @include square-size(31px);
+            user-select: none;
         }
     }
 }
@@ -97,6 +99,7 @@
 
 <script lang="ts">
 import { Dictionaries, DictionaryContent } from '@/logics/models/dictionary-data';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import InputMessage from '@/logics/utils/input-message';
 import { Vue, Options } from 'vue-class-component';
 import InputDialog from '../dialogs/InputDialog.vue';
@@ -124,6 +127,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
         },
         addDictClicked(): void {
             this.inputmsg = InputMessage.Create("新しい用語の追加");
+            StoryWriterObject.ModalOpen();
         },
         addDict(caption: string): void {
             this.dict.Add(caption);

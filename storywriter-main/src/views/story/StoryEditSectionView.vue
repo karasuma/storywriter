@@ -11,7 +11,8 @@
         <hr />
 
         <div class="section__stories" v-for="story in item.stories" :key="story.id" :id="story.id">
-            <textarea spellcheck="false" placeholder="..." v-model="story.text"></textarea>
+            <!--<textarea spellcheck="false" placeholder="..." v-model="story.text"></textarea>-->
+            <AutoResizeTextarea :value="story.text" @input="story.text = $event" />
             <div class="section__stories__arrows">
                 <img class="selectable" src="@/assets/dark/arrow.png" style="transform: rotate(90deg);" 
                 v-show="!isTop(story.id)" @click="moveItem(story.id, true)"/>
@@ -120,11 +121,14 @@ import { Vue, Options } from 'vue-class-component';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 import ColorMessage from '@/logics/utils/color-message';
 import ColorDialog from '../dialogs/ColorDialog.vue';
+import { StoryWriterObject } from '@/logics/models/storywriter-object';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 
 @Options({
     components: {
         MessageDialog,
-        ColorDialog
+        ColorDialog,
+        AutoResizeTextarea
     },
     props: {
         item: {
@@ -149,9 +153,11 @@ import ColorDialog from '../dialogs/ColorDialog.vue';
                 SystemMessage.MessageType.Normal,
                 true
             );
+            StoryWriterObject.ModalOpen();
         },
         changeColor(): void {
             this.colortrig = ColorMessage.Show(ColorMessage.Type.Dark);
+            StoryWriterObject.ModalOpen();
         },
         msgResult(result: number): void {
             if(result == SystemMessage.MessageResult.OK) {
