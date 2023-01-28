@@ -9,7 +9,12 @@
         </div>
 
         <div class="storyedit__desc">
-            <textarea spellcheck="false" rows="4" v-model="storyData.description"></textarea>
+            <!--<textarea spellcheck="false" rows="4" v-model="storyData.description"></textarea>-->
+            <AutoResizeTextarea 
+                :value="storyData.description"
+                @input="storyData.description = $event"
+                :minHeight="160"
+            />
         </div>
 
         <div class="storyedit__timeline" v-for="item in storyData.items" :key="item.id" :id="item.id"
@@ -106,6 +111,7 @@ import ColorMessage from '@/logics/utils/color-message';
 import DragElement from '@/logics/utils/draggable';
 import SystemMessage from '@/logics/utils/SystemMessage';
 import { Vue, Options } from 'vue-class-component';
+import AutoResizeTextarea from '../dialogs/AutoResizeTextarea.vue';
 import ColorDialog from '../dialogs/ColorDialog.vue';
 import MessageDialog from '../dialogs/MessageDialog.vue';
 import StoryEditSectionView from './StoryEditSectionView.vue';
@@ -114,7 +120,8 @@ import StoryEditSectionView from './StoryEditSectionView.vue';
     components: {
         StoryEditSectionView,
         MessageDialog,
-        ColorDialog
+        ColorDialog,
+        AutoResizeTextarea
     },
     props: {
         storyData: {
