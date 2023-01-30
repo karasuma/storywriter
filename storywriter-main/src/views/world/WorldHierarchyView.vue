@@ -177,6 +177,7 @@ export default class WorldHierarchyView extends Vue {
 
 <style lang="scss" scoped>
 @import '@/views/css/base-design.scss';
+$World-Width: 250px;
 
 .items {
     width: 100%;
@@ -210,17 +211,18 @@ export default class WorldHierarchyView extends Vue {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            width: 100%;
+            width: 90%;
             &__left {
                 display: flex;
                 align-items: center;
-                width: 100%;
+                max-width: calc( 90% - 4em );
                 margin-left: 4px;
                 & > img {
                     @include square-size(1.5em);
                     cursor: pointer;
                 }
                 & > p {
+                    @include hide-overflow-text;
                     margin-left: 6px;
                     font-size: 1.2em;
                     cursor: pointer;
@@ -231,7 +233,7 @@ export default class WorldHierarchyView extends Vue {
             }
             &__right {
                 display: flex;
-                justify-content: flex-end;
+                justify-content: flex-start;
                 align-items: center;
                 width: 4em;
                 margin-right: 4px;
@@ -244,7 +246,10 @@ export default class WorldHierarchyView extends Vue {
 
         &__item {
             align-self: center;
+            max-width: calc( #{$World-Width} - 6em );
+            @include hide-overflow-text;
             & > p {
+                @include hide-overflow-text;
                 align-self: center;
                 cursor: pointer;
                 &:hover {
