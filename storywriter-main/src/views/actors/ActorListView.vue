@@ -3,6 +3,8 @@ import { ActorData, Actors } from '@/logics/models/actor-data';
 import { Defs } from '@/logics/models/defs';
 import { ItemResource } from '@/logics/models/resource';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
+import { Utils } from '@/logics/models/utils';
+import DragElement from '@/logics/utils/draggable';
 import InputMessage from '@/logics/utils/input-message';
 import { Vue, Options } from 'vue-class-component';
 import InputDialog from '../dialogs/InputDialog.vue';
@@ -34,7 +36,26 @@ import InputDialog from '../dialogs/InputDialog.vue';
         },
         isImage(res: ItemResource): boolean {
             return res.type == Defs.ResourceType.Image;
-        }
+        },
+        // Drag events
+        itemDragStart(id: string, event: DragEvent): void {
+            this.drag.DragStart(id, event);
+            this.dragging = true;
+        },
+        itemDragOver(id: string, event: DragEvent): void {
+            if(!this.dragging) return;
+            this.drag.DragOver(id, event);
+        },
+        itemDragLeave(id: string): void {
+            if(!this.dragging) return;
+            this.drag.DragLeave(id);
+        },
+        itemOnDrop(id: string, event: DragEvent): void {
+            this.drag.Drop(id, event, (recvID: string, nextID: string) => {
+                this.AdjustActor(recvID, nextID);
+                this.dragging = false;
+            });
+        },
     },
     computed: {
         filteredActors: function(): Array<ActorData> {
@@ -52,8 +73,24 @@ export default class ActorListView extends Vue {
     searchword = "";
     inputmsg = new InputMessage();
 
+    drag = new DragElement(document);
+    dragging = false;
+
     public addActor(name: string): void {
         this.actors.Add(name);
+    }
+
+    public AdjustActor(moveeID: string, nextID: string): void {
+        const moveeIdx = this.actors.actors.findIndex(x => x.id === moveeID);
+        if(nextID === DragElement.NoNextElement) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const movee = this.actors.actors[moveeIdx];
+            this.actors.actors.push(movee);
+            this.actors.actors.splice(moveeIdx, 1);
+            return;
+        }
+        const nextIdx = this.actors.actors.findIndex(x => x.id === nextID);
+        Utils.moveAt(this.actors.actors, moveeIdx, nextIdx > moveeIdx ? nextIdx - 1 : nextIdx);
     }
 }
 </script>
@@ -67,6 +104,10 @@ export default class ActorListView extends Vue {
         </div>
 
         <div class="actor selectable" v-for="d in filteredActors" :key="d.id" :id="d.id"
+            draggable="true" @dragstart="itemDragStart(d.id, $event)"
+            @dragover="itemDragOver(d.id, $event)"
+            @dragleave="itemDragLeave(d.id)"
+            @drop="itemOnDrop(d.id, $event)"
             :style="selectedCss(d)" :title="d.name" @click="setEdit(d)">
             <img v-if="isImage(d.face)" class="actor__face" :src="d.face.resource" />
             <img v-else class="actor__face" src="@/assets/dark/person.png" />
