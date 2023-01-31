@@ -73,6 +73,7 @@
             font-size: 21px;
             font-weight: bold;
             height: 1.3em;
+            @include hide-overflow-text;
         }
         &__description {
             margin: 2px 6px;
