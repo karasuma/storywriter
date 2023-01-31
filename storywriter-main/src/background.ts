@@ -9,7 +9,7 @@ import path from 'path'
 import fs from 'fs/promises';
 import log from 'electron-log';
 import { existsSync } from 'fs';
-import { Information } from './logics/models/information'
+import { HistoryInfo, Information } from './logics/models/information'
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Scheme must be registered before the app is ready
@@ -84,14 +84,23 @@ async function createWindow() {
   })
   IpcUtils.RelayOnMain(IpcUtils.DefinedIpcChannels.DefaultStoryPath, () => {
     return path.join(path.resolve("."), "default.ysd");
-  });
+  })
 
-  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.HomeData, async (_, data) => {
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.HomeData, async () => {
     const settingFile = path.join(path.resolve("."), "home.json");
-    const json = data as string;
+    // Load
+    let jsonFromFile = JSON.stringify(new Information(), null, '\t');
+    if(existsSync(settingFile)) {
+      jsonFromFile = await fs.readFile(settingFile, 'utf-8');
+    }
+    return jsonFromFile;
+  })
+  IpcUtils.RelayOnMainAsync(IpcUtils.DefinedIpcChannels.HistoryData, async (_, data) => {
+    const settingFile = path.join(path.resolve("."), "history.json");
+    const json = (data as string)[0];
     if(json.length === 0) {
       // Load
-      let jsonFromFile = JSON.stringify(new Information(), null, '\t');
+      let jsonFromFile = JSON.stringify(new HistoryInfo(), null, '\t');
       if(existsSync(settingFile)) {
         jsonFromFile = await fs.readFile(settingFile, 'utf-8');
       }

@@ -6,7 +6,7 @@ import { Chats } from "./chat-data";
 import { Defs } from "./defs";
 import { Dictionaries } from "./dictionary-data";
 import { Savedata } from "./file_controller/savedata";
-import { Information } from "./information";
+import { HistoryInfo, Information } from "./information";
 import { Memos } from "./memo-data";
 import { Setting } from "./setting";
 import { Stories } from "./story-data";
@@ -24,6 +24,7 @@ export class StoryWriterObject {
     public setting = new Setting();
     public message = new Notifier();
     public information = new Information();
+    public history = new HistoryInfo();
 
     public currentView = 1;
 
@@ -40,13 +41,13 @@ export class StoryWriterObject {
         }
         this.message.Send(`'${this.setting.URI}' へ保存しました！`, Notifier.Levels.Info);
 
-        // Save setting data
-        const storyIdx = this.information.previousStories.indexOf(this.setting.URI);
+        // Save history data
+        const storyIdx = this.history.previousStories.indexOf(this.setting.URI);
         if(storyIdx !== -1) {
-            this.information.previousStories.splice(storyIdx, 1);
+            this.history.previousStories.splice(storyIdx, 1);
         }
-        this.information.previousStories.unshift(this.setting.URI);
-        IpcUtils.Send(IpcUtils.DefinedIpcChannels.HomeData, JSON.stringify(this.information, null, '\t'));
+        this.history.previousStories.unshift(this.setting.URI);
+        IpcUtils.Send(IpcUtils.DefinedIpcChannels.HistoryData, JSON.stringify(this.history, null, '\t'));
     }
 
     public async Load(loadDefault = false): Promise<void> {
@@ -74,14 +75,14 @@ export class StoryWriterObject {
             this.setting.URI = "";
             return;
         }
-        const storyIdx = this.information.previousStories.indexOf(this.setting.URI);
-        if(storyIdx !== -1) {
-            this.information.previousStories.splice(storyIdx, 1);
-        }
-        this.information.previousStories.unshift(this.setting.URI);
 
-        // Save setting data
-        IpcUtils.Send(IpcUtils.DefinedIpcChannels.HomeData, JSON.stringify(this.information, null, '\t'));
+        // Save history data
+        const storyIdx = this.history.previousStories.indexOf(this.setting.URI);
+        if(storyIdx !== -1) {
+            this.history.previousStories.splice(storyIdx, 1);
+        }
+        this.history.previousStories.unshift(this.setting.URI);
+        IpcUtils.Send(IpcUtils.DefinedIpcChannels.HistoryData, JSON.stringify(this.history, null, '\t'));
     }
 }
 
