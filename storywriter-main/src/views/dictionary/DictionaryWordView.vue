@@ -7,6 +7,10 @@
         </div>
 
         <div class="word selectable" v-for="d in filteredDicts" :key="d.id" :id="d.id"
+            draggable="true" @dragstart="itemDragStart(d.id, $event)"
+            @dragover="itemDragOver(d.id, $event)"
+            @dragleave="itemDragLeave(d.id)"
+            @drop="itemOnDrop(d.id, $event)"
             :style="selectedCss(d)" :title="d.caption" @click="setEdit(d)">
             <p class="word__caption">{{ d.caption }}</p>
             <p class="word__description">{{ d.description.length == 0 ? "..." : d.description }}</p>
@@ -101,6 +105,8 @@
 <script lang="ts">
 import { Dictionaries, DictionaryContent } from '@/logics/models/dictionary-data';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
+import { Utils } from '@/logics/models/utils';
+import DragElement from '@/logics/utils/draggable';
 import InputMessage from '@/logics/utils/input-message';
 import { Vue, Options } from 'vue-class-component';
 import InputDialog from '../dialogs/InputDialog.vue';
@@ -138,7 +144,26 @@ import InputDialog from '../dialogs/InputDialog.vue';
                 x.isEditing = false;
             });
             d.isEditing = true;
-        }
+        },
+        // Drag events
+        itemDragStart(id: string, event: DragEvent): void {
+            this.drag.DragStart(id, event);
+            this.dragging = true;
+        },
+        itemDragOver(id: string, event: DragEvent): void {
+            if(!this.dragging) return;
+            this.drag.DragOver(id, event);
+        },
+        itemDragLeave(id: string): void {
+            if(!this.dragging) return;
+            this.drag.DragLeave(id);
+        },
+        itemOnDrop(id: string, event: DragEvent): void {
+            this.drag.Drop(id, event, (recvID: string, nextID: string) => {
+                this.AdjustDict(recvID, nextID);
+                this.dragging = false;
+            });
+        },
     },
     computed: {
         widthCss: function(): string {
@@ -162,5 +187,21 @@ export default class DictionaryWordView extends Vue {
     width!: string;
     searchword = "";
     inputmsg = new InputMessage();
+
+    drag = new DragElement(document);
+    dragging = false;
+
+    public AdjustDict(moveeID: string, nextID: string): void {
+        const moveeIdx = this.dict.dictionaries.findIndex(x => x.id === moveeID);
+        if(nextID === DragElement.NoNextElement) {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+            const movee = this.dict.dictionaries[moveeIdx];
+            this.dict.dictionaries.push(movee);
+            this.dict.dictionaries.splice(moveeIdx, 1);
+            return;
+        }
+        const nextIdx = this.dict.dictionaries.findIndex(x => x.id === nextID);
+        Utils.moveAt(this.dict.dictionaries, moveeIdx, nextIdx > moveeIdx ? nextIdx - 1 : nextIdx);
+    }
 }
 </script>
