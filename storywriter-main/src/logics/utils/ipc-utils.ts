@@ -15,6 +15,7 @@ export class IpcUtils {
         SaveClose: "save_close",
         SaveHome: "save_home",
         HomeData: "home_data",
+        HistoryData: "history_data",
         DefaultStoryPath: "def_file_path",
         ModalOpen: "modal_open"
     } as const;

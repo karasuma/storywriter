@@ -1,5 +1,5 @@
 <script lang="ts">
-import { Information } from '@/logics/models/information';
+import { HistoryInfo, Information } from '@/logics/models/information';
 import { StoryWriterObject } from '@/logics/models/storywriter-object';
 import { IpcUtils } from '@/logics/utils/ipc-utils';
 import SystemMessage from '@/logics/utils/SystemMessage';
@@ -63,16 +63,22 @@ export default class EntranceView extends Vue {
     mounted(): void {
         IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.HomeData, (_, arg) => {
             const json = arg as string;
-            if(json.length === 0) return; // Because background.ts proceed to save
             const info = JSON.parse(json) as Information;
             this.vm.information.Title = info.Title;
             this.vm.information.Subtitle = info.Subtitle;
             this.vm.information.News.splice(0);
             info.News.forEach(n => this.vm.information.News.push(n));
-            this.vm.information.previousStories.splice(0);
-            info.previousStories.forEach(s => this.vm.information.previousStories.push(s));
         });
         IpcUtils.Send(IpcUtils.DefinedIpcChannels.HomeData);
+
+        IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.HistoryData, (_, arg) => {
+            const json = arg as string;
+            if(json.length === 0) return; // Because background.ts proceed to save
+            const info = JSON.parse(json) as HistoryInfo;
+            this.vm.history.previousStories.splice(0);
+            info.previousStories.forEach(s => this.vm.history.previousStories.push(s));
+        });
+        IpcUtils.Send(IpcUtils.DefinedIpcChannels.HistoryData, "");
 
         IpcUtils.ReceiveFromRelay(IpcUtils.DefinedIpcChannels.DefaultStoryPath, async (_, arg) => {
             this.vm.setting.URI = arg as string;
@@ -111,7 +117,7 @@ export default class EntranceView extends Vue {
         <div class="history">
             <p class="history__caption">この間のお話</p>
             <div class="history__list">
-                <p class="history__list-item" v-for="item in vm.information.previousStories" :key="item"
+                <p class="history__list-item" v-for="item in vm.history.previousStories" :key="item"
                     @click="openFile(item)">
                     {{ printHistory(item) }}
                 </p>
