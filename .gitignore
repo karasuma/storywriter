@@ -151,3 +151,4 @@ pnpm-debug.log*
 storywriter-main/dist_electron
 storywriter-main/setting.scrap
 storywriter-main/home.json
+storywriter-main/history.json
