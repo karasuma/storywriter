@@ -62,7 +62,7 @@ import InputDialog from '../dialogs/InputDialog.vue';
             if(this.searchword.length == 0) {
                 return this.actors.actors;
             }
-            return this.actors.filter((x: ActorData) => x.name.indexOf(this.searchword) >= 0);
+            return this.actors.actors.filter((x: ActorData) => x.name.indexOf(this.searchword) >= 0);
         }
     }
 })
