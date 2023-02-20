@@ -1,9 +1,10 @@
 import { Savedata } from "@/logics/models/file_controller/savedata";
 import { StoryWriterObject, StoryWriterObjectSample } from "@/logics/models/storywriter-object";
 import fs from 'fs';
+import path from "path";
 
 describe("savedata.ts", () => {
-    const filepath = "C:\\Temp\\storywriter.test.json";
+    const filepath = path.resolve("./tests/test.ysd");
     it("can create savedata", async () => {
         // Arrange
         // x
