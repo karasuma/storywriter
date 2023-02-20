@@ -139,6 +139,7 @@ import { StoryWriterObject } from '@/logics/models/storywriter-object';
                 if(result === SystemMessage.MessageResult.OK) {
                     IpcUtils.Send(IpcUtils.DefinedIpcChannels.SaveHome, this.vm.setting.URI);
                 } else {
+                    this.setting.URI = "";
                     this.setting.IsTitle = true;
                 }
             }

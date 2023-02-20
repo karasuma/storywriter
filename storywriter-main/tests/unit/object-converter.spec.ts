@@ -1,8 +1,9 @@
 import { ObjectConverterAsync } from "@/logics/models/file_controller/object-converter";
 import { StoryWriterObject, StoryWriterObjectSample } from "@/logics/models/storywriter-object";
+import path from "path";
 
 describe("object-converter.ts", () => {
-    const filepath = "C:\\Temp\\storywriter.test.json";
+    const filepath = path.resolve("./tests/test.plane.ysd");
     it("can save data to DB", async () => {
         // Arrange
         // x
