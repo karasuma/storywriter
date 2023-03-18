@@ -5,7 +5,6 @@ cache:
     - storywriter-main/node_modules/
 
 before_script:
-  - pip install --upgrade pip
   - cd storywriter-main
   - yarn install
 
@@ -22,4 +21,5 @@ build-job:       # This job runs in the build stage, which runs first.
   stage: build
   script:
     - yarn electron:build
-
+  artifacts:
+    expire_in: 30 days
