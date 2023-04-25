@@ -75,10 +75,7 @@ import ChatListView from './ChatListView.vue';
             this.editingChat().storyId = story?.content.id ?? "";
         },
         selectChanged(): void {
-            const story: Stories = this.vm.story.GetFlattenStories()
-                    .filter((x: Stories) => !x.isDir)
-                    .find((x: Stories) => x.content.id == this.editingChat().storyId);
-            this.selectStory = story?.content.caption ?? "";
+            this.SelectionChanged();
         },
         getActorName(id: string): string {
             const actor = this.vm.actor.actors.find((x: ActorData) => x.id == id);
@@ -178,6 +175,17 @@ export default class ChatView extends Vue {
         const current = chat.timeline.find((x: ChatTalker) => x.id == currentID);
         const next = chat.timeline.find((x: ChatTalker) => x.id == nextID);
         chat.MoveTalk(current!, next!);
+    }
+
+    public SelectionChanged(): void {
+        const currChat = this.vm.chat.chats.find((x: ChatItem) => x.isEditing);
+        const stories: Array<Stories> = this.vm.story.GetFlattenStories();
+        const story = stories.find(s => s.content.id == currChat?.storyId);
+        this.selectStory = story?.content.caption ?? "";
+    }
+
+    mounted(): void {
+        this.SelectionChanged();
     }
 }
 </script>

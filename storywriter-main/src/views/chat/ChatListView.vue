@@ -17,6 +17,12 @@ import { Options, Vue } from 'vue-class-component';
         }
     },
     methods: {
+        hasEditing(): boolean {
+            return this.vm.chat.chats.find((x: ChatItem) => x.isEditing) !== undefined;
+        },
+        editingChat(): ChatItem {
+            return this.vm.chat.chats.find((x: ChatItem) => x.isEditing);
+        },
         selectedCss(chat: ChatItem): string {
             if(chat.isEditing) {
                 return "border-left: solid 3px orange; opacity: 1;";
@@ -40,24 +46,22 @@ import { Options, Vue } from 'vue-class-component';
                 .map(id => this.vm.actor.actors.find((a: ActorData) => a.id == id)?.name ?? "")
                 .filter((s: string) => s.length > 0);
             if(c.description.length + actors.length == 0) {
-                return "";
+                return "...";
             }
-            if(c.description.length == 0 && actors.length > 0) {
-                return actors.join(", ");
+            if(actors.length > 0) {
+                return `${actors.length}人: ${actors.join(", ")}`;
             }
-            return `${actors.length}人: ${c.description}`;
+            return `0人: ${c.description}`;
         },
         storyname(c: ChatItem): string {
             const story = this.vm.story.GetFlattenStories().find((x: Stories) => x.content.id == c.storyId);
-            if(story === undefined || story.content.description.length == 0) {
-                const actors = c.timeline
-                    .map(t => t.actorId)
-                    .filter((x, i, a) => a.indexOf(x) === i)
-                    .map(id => this.vm.actor.actors.find((a: ActorData) => a.id == id)?.name ?? "")
-                    .filter((s: string) => s.length > 0);
-                return `${actors.length}人の会話`;
+            if(story === undefined && c.description.length == 0) {
+                return "...";
             }
-            return story.content.description;
+            if(c.description.length == 0) {
+                return story.content.caption;
+            }
+            return c.description;
         },
         storycolorCss(c: ChatItem): string {
             const story = this.vm.story.GetFlattenStories().find((x: Stories) => x.content.id == c.storyId);
