@@ -1,0 +1,25 @@
+image: electronuserland/builder:wine
+
+cache:
+  paths:
+    - storywriter-main/node_modules/
+
+before_script:
+  - cd storywriter-main
+  - yarn install
+
+stages:          # List of stages for jobs, and their order of execution
+  - test
+  - build
+
+unit-test-job:   # This job runs in the test stage.
+  stage: test    # It only starts when the job in the build stage completes successfully.
+  script:
+    - yarn jest:unit
+
+build-job:       # This job runs in the build stage, which runs first.
+  stage: build
+  script:
+    - yarn electron:build
+  artifacts:
+    expire_in: 30 days
